@@ -1,0 +1,43 @@
+syntax: glob
+
+# log files  #
+##############
+*.log
+logs
+
+# OS generated files #
+######################
+.DS_Store
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Subversion #
+##############
+.svn
+
+# Visual Studio #
+#################
+*.suo
+*.user
+*_ReSharper.*
+*.docstates
+StyleCop.Cache
+*.ReSharper
+*ncrunch*
+*.crunchsolution.cache
+
+# VIM #
+#######
+*.swp
+*~
+
+# Well known folders #
+######################
+_build
+_logs
+bin
+obj
+packages
+.idea
+
