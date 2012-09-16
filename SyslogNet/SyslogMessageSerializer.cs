@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SyslogNet
 {
-	public class SyslogSerializer
+	public class SyslogMessageSerializer
 	{
 		public const string NilValue = "-";
 		private readonly char[] asciiCharsBuffer = new char[255];

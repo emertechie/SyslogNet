@@ -8,14 +8,14 @@ namespace SyslogNet.Tests
 	public class SyslogSerializerTests
 	{
 		private readonly DateTimeOffset knownDateTimeOffset;
-		private readonly SyslogSerializer sut;
+		private readonly SyslogMessageSerializer sut;
 
 		public SyslogSerializerTests()
 		{
 			var offset = TimeSpan.FromHours(2);
 			knownDateTimeOffset = new DateTimeOffset(2012, 9, 16, 9, 26, 10, 123, offset);
 
-			sut = new SyslogSerializer();
+			sut = new SyslogMessageSerializer();
 		}
 
 		[Fact]

@@ -5,7 +5,7 @@ namespace SyslogNet.Tests
 {
 	internal static class SyslogSerializerExtensionsForTests
 	{
-		public static string Serialize(this SyslogSerializer serializer, SyslogMessage message)
+		public static string Serialize(this SyslogMessageSerializer serializer, SyslogMessage message)
 		{
 			using (var stream = new MemoryStream())
 			{
