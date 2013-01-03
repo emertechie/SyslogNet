@@ -5,17 +5,17 @@ using Xunit.Extensions;
 
 namespace SyslogNet.Tests
 {
-	public class SyslogSerializerTests
+	public class SyslogRfc5424MessageSerializerTests
 	{
 		private readonly DateTimeOffset knownDateTimeOffset;
-		private readonly SyslogMessageSerializer sut;
+		private readonly SyslogRfc5424MessageSerializer sut;
 
-		public SyslogSerializerTests()
+		public SyslogRfc5424MessageSerializerTests()
 		{
 			var offset = TimeSpan.FromHours(2);
 			knownDateTimeOffset = new DateTimeOffset(2012, 9, 16, 9, 26, 10, 123, offset);
 
-			sut = new SyslogMessageSerializer();
+			sut = new SyslogRfc5424MessageSerializer();
 		}
 
 		[Fact]

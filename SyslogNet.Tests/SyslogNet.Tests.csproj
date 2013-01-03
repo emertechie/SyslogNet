@@ -48,7 +48,7 @@
   <ItemGroup>
     <Compile Include="StructuredDataElementTests.cs" />
     <Compile Include="SyslogSerializerExtensionsForTests.cs" />
-    <Compile Include="SyslogSerializerTests.cs" />
+    <Compile Include="SyslogRfc5424MessageSerializerTests.cs" />
     <Compile Include="SyslogMessageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

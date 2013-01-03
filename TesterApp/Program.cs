@@ -16,7 +16,9 @@ namespace TesterApp
 				var syslogMessage = new SyslogMessage(
 					DateTimeOffset.Now,
 					Facility.UserLevelMessages,
-					Severity.Informational,
+					Severity.Error,
+					//Facility.UserLevelMessages,
+					//Severity.Informational,
 					options.HostName ?? Environment.MachineName,
 					options.AppName,
 					options.ProcId,
@@ -29,7 +31,7 @@ namespace TesterApp
 				{
 					using (var stream = new MemoryStream())
 					{
-						var serializer = new SyslogMessageSerializer();
+						var serializer = new SyslogRfc5424MessageSerializer();
 						serializer.Serialize(syslogMessage, stream);
 
 						stream.Position = 0;
