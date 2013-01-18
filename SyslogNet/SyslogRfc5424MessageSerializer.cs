@@ -11,10 +11,15 @@ namespace SyslogNet
 
 		public void Serialize(SyslogMessage syslogMessage, Stream stream)
 		{
+			// Note: The .Net ISO 8601 "o" format string uses 7 decimal places for fractional second. Syslog spec only allows 6, hence the custom format string
+			var timestamp = syslogMessage.DateTimeOffset.HasValue
+				? syslogMessage.DateTimeOffset.Value.ToString("yyyy-MM-ddTHH:mm:ss.ffffffK")
+				: null;
+
 			var headerBuilder = new StringBuilder();
 			headerBuilder.Append("<").Append(syslogMessage.PriorityValue).Append(">");
 			headerBuilder.Append(syslogMessage.Version);
-			headerBuilder.Append(" ").Append(syslogMessage.Timestamp.FormatSyslogField(NilValue));
+			headerBuilder.Append(" ").Append(timestamp.FormatSyslogField(NilValue));
 			headerBuilder.Append(" ").Append(syslogMessage.HostName.FormatSyslogAsciiField(NilValue, 255, asciiCharsBuffer));
 			headerBuilder.Append(" ").Append(syslogMessage.AppName.FormatSyslogAsciiField(NilValue, 48, asciiCharsBuffer));
 			headerBuilder.Append(" ").Append(syslogMessage.ProcId.FormatSyslogAsciiField(NilValue, 128, asciiCharsBuffer));

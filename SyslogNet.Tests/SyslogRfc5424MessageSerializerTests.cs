@@ -7,14 +7,10 @@ namespace SyslogNet.Tests
 {
 	public class SyslogRfc5424MessageSerializerTests
 	{
-		private readonly DateTimeOffset knownDateTimeOffset;
 		private readonly SyslogRfc5424MessageSerializer sut;
 
 		public SyslogRfc5424MessageSerializerTests()
 		{
-			var offset = TimeSpan.FromHours(2);
-			knownDateTimeOffset = new DateTimeOffset(2012, 9, 16, 9, 26, 10, 123, offset);
-
 			sut = new SyslogRfc5424MessageSerializer();
 		}
 
@@ -28,12 +24,28 @@ namespace SyslogNet.Tests
 		}
 
 		[Fact]
-		public void CanFormatSyslogMessageWithTimestamp()
+		public void CanFormatSyslogMessageWithUtcDateTime()
 		{
-			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTimeOffset: knownDateTimeOffset);
+			var utcDateTime = new DateTime(2012, 9, 15, 20, 23, 15, 999, DateTimeKind.Utc);
+			var expectedTimestamp = "2012-09-15T20:23:15.999000+00:00";
+
+			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, utcDateTime);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 {0} - - - -", msg.Timestamp), serializedMsg);
+			Assert.Equal(String.Format("<11>1 {0} - - - -", expectedTimestamp), serializedMsg);
+		}
+
+		[Fact]
+		public void CanFormatSyslogMessageWithNonUtcDateTimeOffset()
+		{
+			var offset = TimeSpan.FromHours(2);
+			var knownDateTimeOffset = new DateTimeOffset(2012, 9, 16, 9, 26, 10, 123, offset);
+			var expectedTimestamp = "2012-09-16T09:26:10.123000+02:00";
+
+			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, knownDateTimeOffset);
+
+			string serializedMsg = sut.Serialize(msg);
+			Assert.Equal(String.Format("<11>1 {0} - - - -", expectedTimestamp), serializedMsg);
 		}
 
 		[Theory]

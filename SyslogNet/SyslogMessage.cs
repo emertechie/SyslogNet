@@ -15,7 +15,6 @@ namespace SyslogNet
 		private readonly IEnumerable<StructuredDataElement> structuredDataElements;
 		private readonly int priorityValue;
 		private readonly DateTimeOffset? dateTimeOffset;
-		private readonly string timestamp;
 		
 		public SyslogMessage(
 			DateTimeOffset? dateTimeOffset,
@@ -37,11 +36,6 @@ namespace SyslogNet
 			this.msgId = msgId;
 			this.message = message;
 			this.structuredDataElements = structuredDataElements;
-
-			// Note: The .Net ISO 8601 "o" format string uses 7 decimal places for fractional second. Syslog spec only allows 6, hence the custom format string
-			timestamp = dateTimeOffset.HasValue
-				? dateTimeOffset.Value.ToString("yyyy-MM-ddTHH:mm:ss.ffffffK")
-				: null;
 
 			priorityValue = ((int)facility * 8) + (int)severity;
 		}
@@ -69,11 +63,6 @@ namespace SyslogNet
 		public DateTimeOffset? DateTimeOffset
 		{
 			get { return dateTimeOffset; }
-		}
-
-		public string Timestamp
-		{
-			get { return timestamp; }
 		}
 
 		public string HostName
