@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Facility.cs" />
+    <Compile Include="ISyslogMessageSerializer.cs" />
     <Compile Include="Severity.cs" />
     <Compile Include="StructuredDataElement.cs" />
     <Compile Include="SyslogMessageSerializerBase.cs" />
