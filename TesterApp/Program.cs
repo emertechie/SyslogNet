@@ -1,8 +1,8 @@
 using System;
-using System.IO;
-using System.Net.Sockets;
 using CommandLine;
 using SyslogNet;
+using SyslogNet.Serialization;
+using SyslogNet.Transport;
 
 namespace TesterApp
 {
@@ -10,50 +10,78 @@ namespace TesterApp
 	{
 		public static void Main(string[] args)
 		{
-			var options = new Options();
-			if (new CommandLineParser().ParseArguments(args, options))
+			try
 			{
-				var syslogMessage = new SyslogMessage(
-					DateTimeOffset.Now,
-					Facility.UserLevelMessages,
-					Severity.Error,
-					//Facility.UserLevelMessages,
-					//Severity.Informational,
-					options.HostName ?? Environment.MachineName,
-					options.AppName,
-					options.ProcId,
-					options.MsgType,
-					options.Message);
-
-				var client = new UdpClient(options.SyslogServerHostname, options.SyslogServerPort);
-
-				try
+				var options = new Options();
+				if (new CommandLineParser().ParseArguments(args, options))
 				{
-					using (var stream = new MemoryStream())
-					{
-						var serializer = new SyslogRfc3164MessageSerializer();
-						serializer.Serialize(syslogMessage, stream);
+					// string message = CreateExceptionMessageLevel1();
+					// string message = "What happens\nif I have\nmultiple lines?";
+					// message = message.Replace("\n", "\\n ");
 
-						stream.Position = 0;
+					var syslogMessage = new SyslogMessage(
+						DateTimeOffset.Now,
+						Facility.UserLevelMessages,
+						Severity.Error,
+						//Facility.UserLevelMessages,
+						//Severity.Informational,
+						options.LocalHostName ?? Environment.MachineName,
+						options.AppName,
+						options.ProcId,
+						options.MsgType,
+						// message
+						options.Message ?? "Test message at " + DateTime.Now
+						);
 
-						var datagramBytes = new byte[stream.Length];
-						stream.Read(datagramBytes, 0, (int)stream.Length);
+					ISyslogMessageSerializer serializer = options.SyslogVersion == "5424"
+						? (ISyslogMessageSerializer)new SyslogRfc5424MessageSerializer()
+						: new SyslogRfc3164MessageSerializer();
 
-						client.Send(datagramBytes, (int)stream.Length);
-					}
-				}
-				finally
-				{
-					client.Close();
+					ISyslogMessageSender sender = options.NetworkProtocol == "tcp"
+						? (ISyslogMessageSender)new SyslogTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
+						: new SyslogUdpSender(options.SyslogServerHostname, options.SyslogServerPort);
+
+					sender.Send(syslogMessage, serializer);
 				}
 			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("ERROR: " + ex);
+			}
+		}
+
+		private static string CreateExceptionMessageLevel1()
+		{
+			try
+			{
+				return CreateExceptionMessageLevel2();
+			}
+			catch (Exception ex)
+			{
+				return ex.ToString();
+			}
+		}
+
+		private static string CreateExceptionMessageLevel2()
+		{
+			return CreateExceptionMessageLevel3();
+		}
+
+		private static string CreateExceptionMessageLevel3()
+		{
+			return CreateExceptionMessageLevel4();
+		}
+
+		private static string CreateExceptionMessageLevel4()
+		{
+			throw new Exception("Foo bar");
 		}
 	}
 
 	internal class Options
 	{
 		[Option("h", "hostName", Required = false, HelpText = "The host name. If not set, defaults to the NetBIOS name of the local machine")]
-		public string HostName { get; set; }
+		public string LocalHostName { get; set; }
 
 		[Option("a", "appName", Required = false, HelpText = "The application name")]
 		public string AppName { get; set; }
@@ -72,5 +100,14 @@ namespace TesterApp
 
 		[Option("r", "syslogPort", Required = true, HelpText = "The syslog server port")]
 		public int SyslogServerPort { get; set; }
+
+		[Option("v", "version", Required = false, DefaultValue = "5424", HelpText = "The version of syslog protocol to use. Possible values are '3164' and '5424' (from corresponding RFC documents). Default is '5424'")]
+		public string SyslogVersion { get; set; }
+
+		[Option("o", "protocol", Required = false, DefaultValue = "tcp", HelpText = "The network protocol to use. Possible values are 'tcp' or 'udp'. Default is 'tcp'. Note: TCP always uses SSL connection.")]
+		public string NetworkProtocol { get; set; }
+
+		[Option("c", "cert", Required = false, HelpText = "Optional path to a CA certificate used to verify Syslog server certificate when using TCP protocol")]
+		public string CACertPath { get; set; }
 	}
 }

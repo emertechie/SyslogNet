@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Facility.cs" />
     <Compile Include="Serialization\ISyslogMessageSerializer.cs" />
+    <Compile Include="Serialization\SyslogMessageSerializerExtensions.cs" />
     <Compile Include="Severity.cs" />
     <Compile Include="StructuredDataElement.cs" />
     <Compile Include="Serialization\SyslogMessageSerializerBase.cs" />
@@ -53,6 +54,9 @@
     <Compile Include="Serialization\SyslogRfc5424MessageSerializer.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Transport\ISyslogMessageSender.cs" />
+    <Compile Include="Transport\SyslogTcpSender.cs" />
+    <Compile Include="Transport\SyslogUdpSender.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
