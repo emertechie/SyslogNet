@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Text;
+using SyslogNet.Serialization;
 using Xunit;
 using Xunit.Extensions;
 
-namespace SyslogNet.Tests
+namespace SyslogNet.Tests.Serialization
 {
 	public class SyslogRfc5424MessageSerializerTests
 	{

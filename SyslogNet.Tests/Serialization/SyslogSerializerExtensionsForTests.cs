@@ -1,7 +1,8 @@
 ﻿using System.IO;
 using System.Text;
+using SyslogNet.Serialization;
 
-namespace SyslogNet.Tests
+namespace SyslogNet.Tests.Serialization
 {
 	internal static class SyslogSerializerExtensionsForTests
 	{

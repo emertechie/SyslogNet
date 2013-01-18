@@ -1,4 +1,4 @@
-namespace SyslogNet
+namespace SyslogNet.Serialization
 {
 	public abstract class SyslogMessageSerializerBase
 	{
