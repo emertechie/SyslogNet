@@ -14,13 +14,15 @@ namespace SyslogNet.Tests
 			sut = new SyslogRfc5424MessageSerializer();
 		}
 
-		[Fact]
-		public void CanFormatSyslogMessageWithMinimalData()
+		[Theory]
+		[InlineData(Facility.KernelMessages, Severity.Emergency, 0)]
+		[InlineData(Facility.LocalUse4, Severity.Notice, 165)]
+		public void CalculatesPriorityValueCorrectly(Facility facility, Severity severity, int expectedPriorityValue)
 		{
-			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error);
+			var msg = CreateMinimalSyslogMessage(facility, severity);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal("<11>1 - - - - -", serializedMsg);
+			Assert.Equal(String.Format("<{0}>1 - - - - -", expectedPriorityValue), serializedMsg);
 		}
 
 		[Fact]

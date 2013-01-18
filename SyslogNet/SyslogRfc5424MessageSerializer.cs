@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SyslogNet
 {
-	public class SyslogRfc5424MessageSerializer
+	public class SyslogRfc5424MessageSerializer : SyslogMessageSerializerBase
 	{
 		public const string NilValue = "-";
 		private readonly char[] asciiCharsBuffer = new char[255];
@@ -17,7 +17,7 @@ namespace SyslogNet
 				: null;
 
 			var headerBuilder = new StringBuilder();
-			headerBuilder.Append("<").Append(syslogMessage.PriorityValue).Append(">");
+			headerBuilder.Append("<").Append(CalculatePriorityValue(syslogMessage.Facility, syslogMessage.Severity)).Append(">");
 			headerBuilder.Append(syslogMessage.Version);
 			headerBuilder.Append(" ").Append(timestamp.FormatSyslogField(NilValue));
 			headerBuilder.Append(" ").Append(syslogMessage.HostName.FormatSyslogAsciiField(NilValue, 255, asciiCharsBuffer));

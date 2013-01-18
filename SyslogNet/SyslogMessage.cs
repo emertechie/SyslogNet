@@ -13,7 +13,6 @@ namespace SyslogNet
 		private readonly string msgId;
 		private readonly string message;
 		private readonly IEnumerable<StructuredDataElement> structuredDataElements;
-		private readonly int priorityValue;
 		private readonly DateTimeOffset? dateTimeOffset;
 		
 		public SyslogMessage(
@@ -36,8 +35,6 @@ namespace SyslogNet
 			this.msgId = msgId;
 			this.message = message;
 			this.structuredDataElements = structuredDataElements;
-
-			priorityValue = ((int)facility * 8) + (int)severity;
 		}
 
 		public int Version
@@ -53,11 +50,6 @@ namespace SyslogNet
 		public Severity Severity
 		{
 			get { return severity; }
-		}
-
-		public int PriorityValue
-		{
-			get { return priorityValue; }
 		}
 
 		public DateTimeOffset? DateTimeOffset
