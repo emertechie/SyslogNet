@@ -8,20 +8,20 @@ namespace SyslogNet
 	{
 		public const string NilValue = "-";
 
-		public void Serialize(SyslogMessage syslogMessage, Stream stream)
+		public void Serialize(SyslogMessage message, Stream stream)
 		{
 			// TODO: Should this be in local time?
-			string timestamp = syslogMessage.DateTimeOffset.HasValue
-				? syslogMessage.DateTimeOffset.Value.ToString("MMM dd HH:mm:ss") // TODO: format is not quite right (dd)
+			string timestamp = message.DateTimeOffset.HasValue
+				? message.DateTimeOffset.Value.ToString("MMM dd HH:mm:ss") // TODO: format is not quite right (dd)
 				: null;
 
 			var headerBuilder = new StringBuilder();
-			headerBuilder.Append("<").Append(CalculatePriorityValue(syslogMessage.Facility, syslogMessage.Severity)).Append(">");
+			headerBuilder.Append("<").Append(CalculatePriorityValue(message.Facility, message.Severity)).Append(">");
 			// TODO: Remove use of NilValue?
 			headerBuilder.Append(timestamp.FormatRfc3164SyslogField(NilValue)).Append(" ");
-			headerBuilder.Append(syslogMessage.HostName.FormatRfc3164SyslogField(NilValue, 255)).Append(" ");
-			headerBuilder.Append(syslogMessage.AppName.FormatSyslogField(NilValue, 32)).Append(":");
-			headerBuilder.Append(syslogMessage.Message.FormatSyslogField(NilValue));
+			headerBuilder.Append(message.HostName.FormatRfc3164SyslogField(NilValue, 255)).Append(" ");
+			headerBuilder.Append(message.AppName.FormatSyslogField(NilValue, 32)).Append(":");
+			headerBuilder.Append(message.Message.FormatSyslogField(NilValue));
 
 			byte[] asciiBytes = Encoding.ASCII.GetBytes(headerBuilder.ToString());
 			stream.Write(asciiBytes, 0, asciiBytes.Length);

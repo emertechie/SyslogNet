@@ -9,25 +9,25 @@ namespace SyslogNet
 		public const string NilValue = "-";
 		private readonly char[] asciiCharsBuffer = new char[255];
 
-		public void Serialize(SyslogMessage syslogMessage, Stream stream)
+		public void Serialize(SyslogMessage message, Stream stream)
 		{
 			// Note: The .Net ISO 8601 "o" format string uses 7 decimal places for fractional second. Syslog spec only allows 6, hence the custom format string
-			var timestamp = syslogMessage.DateTimeOffset.HasValue
-				? syslogMessage.DateTimeOffset.Value.ToString("yyyy-MM-ddTHH:mm:ss.ffffffK")
+			var timestamp = message.DateTimeOffset.HasValue
+				? message.DateTimeOffset.Value.ToString("yyyy-MM-ddTHH:mm:ss.ffffffK")
 				: null;
 
 			var headerBuilder = new StringBuilder();
-			headerBuilder.Append("<").Append(CalculatePriorityValue(syslogMessage.Facility, syslogMessage.Severity)).Append(">");
-			headerBuilder.Append(syslogMessage.Version);
+			headerBuilder.Append("<").Append(CalculatePriorityValue(message.Facility, message.Severity)).Append(">");
+			headerBuilder.Append(message.Version);
 			headerBuilder.Append(" ").Append(timestamp.FormatSyslogField(NilValue));
-			headerBuilder.Append(" ").Append(syslogMessage.HostName.FormatSyslogAsciiField(NilValue, 255, asciiCharsBuffer));
-			headerBuilder.Append(" ").Append(syslogMessage.AppName.FormatSyslogAsciiField(NilValue, 48, asciiCharsBuffer));
-			headerBuilder.Append(" ").Append(syslogMessage.ProcId.FormatSyslogAsciiField(NilValue, 128, asciiCharsBuffer));
-			headerBuilder.Append(" ").Append(syslogMessage.MsgId.FormatSyslogAsciiField(NilValue, 32, asciiCharsBuffer));
+			headerBuilder.Append(" ").Append(message.HostName.FormatSyslogAsciiField(NilValue, 255, asciiCharsBuffer));
+			headerBuilder.Append(" ").Append(message.AppName.FormatSyslogAsciiField(NilValue, 48, asciiCharsBuffer));
+			headerBuilder.Append(" ").Append(message.ProcId.FormatSyslogAsciiField(NilValue, 128, asciiCharsBuffer));
+			headerBuilder.Append(" ").Append(message.MsgId.FormatSyslogAsciiField(NilValue, 32, asciiCharsBuffer));
 
 			// TODO structured data
 
-			bool hasMessage = !String.IsNullOrWhiteSpace(syslogMessage.Message);
+			bool hasMessage = !String.IsNullOrWhiteSpace(message.Message);
 			if (hasMessage)
 				headerBuilder.Append(" ");
 
@@ -39,7 +39,7 @@ namespace SyslogNet
 				byte[] utf8Preamble = Encoding.UTF8.GetPreamble();
 				stream.Write(utf8Preamble, 0, utf8Preamble.Length);
 
-				byte[] messageBytes = Encoding.UTF8.GetBytes(syslogMessage.Message);
+				byte[] messageBytes = Encoding.UTF8.GetBytes(message.Message);
 				stream.Write(messageBytes, 0, messageBytes.Length);
 			}
 		}
