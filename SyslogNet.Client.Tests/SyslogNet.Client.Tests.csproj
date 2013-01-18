@@ -58,7 +58,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SyslogNet\SyslogNet.Client.csproj">
+    <ProjectReference Include="..\SyslogNet.Client\SyslogNet.Client.csproj">
       <Project>{F94B72CD-DA67-436E-9244-FA79DF140E0A}</Project>
       <Name>SyslogNet.Client</Name>
     </ProjectReference>
