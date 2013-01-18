@@ -31,11 +31,13 @@ namespace TesterApp
 				{
 					using (var stream = new MemoryStream())
 					{
-						var serializer = new SyslogRfc5424MessageSerializer();
+						var serializer = new SyslogRfc3164MessageSerializer();
 						serializer.Serialize(syslogMessage, stream);
 
 						stream.Position = 0;
-						byte[] datagramBytes = stream.GetBuffer();
+
+						var datagramBytes = new byte[stream.Length];
+						stream.Read(datagramBytes, 0, (int)stream.Length);
 
 						client.Send(datagramBytes, (int)stream.Length);
 					}
