@@ -5,13 +5,15 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{F94B72CD-DA67-436E-9244-FA79DF140E0A}</ProjectGuid>
+    <ProjectGuid>{2D6094E8-8483-4B91-9D5E-BF98B070763F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SyslogNet</RootNamespace>
-    <AssemblyName>SyslogNet</AssemblyName>
+    <RootNamespace>SyslogNet.Client.Tests</RootNamespace>
+    <AssemblyName>SyslogNet.Client.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,27 +40,31 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="xunit">
+      <HintPath>..\packages\xunit.1.9.1\lib\net20\xunit.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.extensions">
+      <HintPath>..\packages\xunit.extensions.1.9.1\lib\net20\xunit.extensions.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Facility.cs" />
-    <Compile Include="Serialization\ISyslogMessageSerializer.cs" />
-    <Compile Include="Serialization\SyslogMessageSerializerExtensions.cs" />
-    <Compile Include="Severity.cs" />
-    <Compile Include="StructuredDataElement.cs" />
-    <Compile Include="Serialization\SyslogMessageSerializerBase.cs" />
-    <Compile Include="Serialization\SyslogRfc3164MessageSerializer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SyslogMessage.cs" />
+    <Compile Include="StructuredDataElementTests.cs" />
+    <Compile Include="Serialization\SyslogRfc3164MessageSerializerTests.cs" />
+    <Compile Include="Serialization\SyslogSerializerExtensionsForTests.cs" />
+    <Compile Include="Serialization\SyslogRfc5424MessageSerializerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Serialization\SyslogRfc5424MessageSerializer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Transport\ISyslogMessageSender.cs" />
-    <Compile Include="Transport\SyslogTcpSender.cs" />
-    <Compile Include="Transport\SyslogUdpSender.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SyslogNet\SyslogNet.Client.csproj">
+      <Project>{F94B72CD-DA67-436E-9244-FA79DF140E0A}</Project>
+      <Name>SyslogNet.Client</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

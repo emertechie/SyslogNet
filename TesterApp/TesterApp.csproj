@@ -52,9 +52,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SyslogNet\SyslogNet.csproj">
+    <ProjectReference Include="..\SyslogNet\SyslogNet.Client.csproj">
       <Project>{F94B72CD-DA67-436E-9244-FA79DF140E0A}</Project>
-      <Name>SyslogNet</Name>
+      <Name>SyslogNet.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

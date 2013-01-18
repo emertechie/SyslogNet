@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Xunit;
 
-namespace SyslogNet.Tests
+namespace SyslogNet.Client.Tests
 {
 	public class StructuredDataElementTests
 	{

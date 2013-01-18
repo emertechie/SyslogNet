@@ -2,9 +2,9 @@ using System;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using SyslogNet.Serialization;
+using SyslogNet.Client.Serialization;
 
-namespace SyslogNet.Transport
+namespace SyslogNet.Client.Transport
 {
 	public class SyslogTcpSender : ISyslogMessageSender, IDisposable
 	{

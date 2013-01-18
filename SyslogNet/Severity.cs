@@ -1,4 +1,4 @@
-﻿namespace SyslogNet
+﻿namespace SyslogNet.Client
 {
 	public enum Severity
 	{

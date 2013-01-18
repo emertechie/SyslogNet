@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SyslogNet
+namespace SyslogNet.Client
 {
 	public class SyslogMessage
 	{

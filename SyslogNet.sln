@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyslogNet", "SyslogNet\SyslogNet.csproj", "{F94B72CD-DA67-436E-9244-FA79DF140E0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyslogNet.Client", "SyslogNet\SyslogNet.Client.csproj", "{F94B72CD-DA67-436E-9244-FA79DF140E0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyslogNet.Tests", "SyslogNet.Tests\SyslogNet.Tests.csproj", "{2D6094E8-8483-4B91-9D5E-BF98B070763F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyslogNet.Client.Tests", "SyslogNet.Tests\SyslogNet.Client.Tests.csproj", "{2D6094E8-8483-4B91-9D5E-BF98B070763F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TesterApp", "TesterApp\TesterApp.csproj", "{9D7482EB-EA3F-4047-9E79-C80EC8E18FED}"
 EndProject

@@ -1,8 +1,9 @@
 using System;
 using CommandLine;
 using SyslogNet;
-using SyslogNet.Serialization;
-using SyslogNet.Transport;
+using SyslogNet.Client;
+using SyslogNet.Client.Serialization;
+using SyslogNet.Client.Transport;
 
 namespace TesterApp
 {

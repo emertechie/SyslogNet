@@ -1,6 +1,6 @@
-using SyslogNet.Serialization;
+using SyslogNet.Client.Serialization;
 
-namespace SyslogNet.Transport
+namespace SyslogNet.Client.Transport
 {
 	public interface ISyslogMessageSender
 	{

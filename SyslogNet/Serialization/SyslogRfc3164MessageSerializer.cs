@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace SyslogNet.Serialization
+namespace SyslogNet.Client.Serialization
 {
 	public class SyslogRfc3164MessageSerializer : SyslogMessageSerializerBase, ISyslogMessageSerializer
 	{

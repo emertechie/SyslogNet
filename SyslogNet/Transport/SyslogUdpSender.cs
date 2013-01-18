@@ -1,8 +1,8 @@
 using System;
 using System.Net.Sockets;
-using SyslogNet.Serialization;
+using SyslogNet.Client.Serialization;
 
-namespace SyslogNet.Transport
+namespace SyslogNet.Client.Transport
 {
 	public class SyslogUdpSender : ISyslogMessageSender, IDisposable
 	{

@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace SyslogNet.Serialization
+namespace SyslogNet.Client.Serialization
 {
 	public static class SyslogMessageSerializerExtensions
 	{
