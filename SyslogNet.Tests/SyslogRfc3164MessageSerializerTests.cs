@@ -21,13 +21,55 @@ namespace SyslogNet.Tests
 			var msg = CreateMinimalSyslogMessage(facility, severity);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<{0}>1 - - - - -", expectedPriorityValue), serializedMsg);
+			Assert.True(serializedMsg.StartsWith(String.Format("<{0}>", expectedPriorityValue)));
+		}
+
+		[Theory]
+		[InlineData("2013-01-18 17:42:30.999", "Jan 18 17:42:30")]
+		[InlineData("2013-01-08 17:42:30.999", "Jan  8 17:42:30")]
+		public void SerializesDateTimesCorrectly(string dateTimeStr, string expectedFormat)
+		{
+			DateTimeOffset? dateTime = DateTime.Parse(dateTimeStr);
+			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime);
+
+			string serializedMsg = sut.Serialize(msg);
+			Assert.True(serializedMsg.StartsWith(String.Format("<11>{0}", expectedFormat)));
+		}
+
+		[Theory]
+		[InlineData("127.0.0.1")]
+		[InlineData("FooMachine")]
+		public void SerializesHostNameCorrectly(string hostName)
+		{
+			DateTimeOffset? dateTime = DateTime.Parse("2013-01-18 17:00:00");
+			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, hostName);
+
+			string serializedMsg = sut.Serialize(msg);
+			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 {0}", hostName)));
 		}
 
 		[Fact]
-		public void Todo()
+		public void SerializesAppNameCorrectly()
 		{
-			throw new NotImplementedException();
+			const string appName = "MyApp";
+
+			DateTimeOffset? dateTime = DateTime.Parse("2013-01-18 17:00:00");
+			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, "FooMachine", appName);
+
+			string serializedMsg = sut.Serialize(msg);
+			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 FooMachine {0}:", appName)));
+		}
+
+		[Fact]
+		public void SerializesMessageCorrectly()
+		{
+			const string message = "Foo and bar";
+
+			DateTimeOffset? dateTime = DateTime.Parse("2013-01-18 17:00:00");
+			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, "FooMachine", "MyApp", message);
+
+			string serializedMsg = sut.Serialize(msg);
+			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 FooMachine MyApp:{0}", message)));
 		}
 
 		private static SyslogMessage CreateMinimalSyslogMessage(
@@ -36,10 +78,11 @@ namespace SyslogNet.Tests
 			DateTimeOffset? dateTimeOffset = null,
 			string hostName = null,
 			string appName = null,
-			string procId = null,
-			string msgId = null,
 			string message = null)
 		{
+			const string procId = null;
+			const string msgId = null;
+
 			return new SyslogMessage(dateTimeOffset, facility, severity, hostName, appName, procId, msgId, message);
 		}
 	}

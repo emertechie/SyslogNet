@@ -11,13 +11,15 @@ namespace SyslogNet
 
 		public void Serialize(SyslogMessage message, Stream stream)
 		{
+			var priorityValue = CalculatePriorityValue(message.Facility, message.Severity);
+
 			// Note: The .Net ISO 8601 "o" format string uses 7 decimal places for fractional second. Syslog spec only allows 6, hence the custom format string
 			var timestamp = message.DateTimeOffset.HasValue
 				? message.DateTimeOffset.Value.ToString("yyyy-MM-ddTHH:mm:ss.ffffffK")
 				: null;
 
 			var headerBuilder = new StringBuilder();
-			headerBuilder.Append("<").Append(CalculatePriorityValue(message.Facility, message.Severity)).Append(">");
+			headerBuilder.Append("<").Append(priorityValue).Append(">");
 			headerBuilder.Append(message.Version);
 			headerBuilder.Append(" ").Append(timestamp.FormatSyslogField(NilValue));
 			headerBuilder.Append(" ").Append(message.HostName.FormatSyslogAsciiField(NilValue, 255, asciiCharsBuffer));
@@ -47,18 +49,28 @@ namespace SyslogNet
 
 	internal static class StringExtensions
 	{
-		public static string FormatSyslogField(this string s, string nullOrWhitespaceReplacementValue, int? maxLength = null)
+		public static string IfNotNullOrWhitespace(this string s, Func<string, string> action)
 		{
-			return String.IsNullOrWhiteSpace(s)
-				? nullOrWhitespaceReplacementValue
-				: maxLength.HasValue
-					? s.Length > maxLength.Value ? s.Substring(0, maxLength.Value) : s
-					: s;
+			return String.IsNullOrWhiteSpace(s) ? s : action(s);
 		}
 
-		public static string FormatSyslogAsciiField(this string s, string nullOrWhitespaceReplacementValue, int maxLength, char[] charBuffer)
+		public static string FormatSyslogField(this string s, string replacementValue, int? maxLength = null)
 		{
-			s = FormatSyslogField(s, nullOrWhitespaceReplacementValue, maxLength);
+			return String.IsNullOrWhiteSpace(s)
+				? replacementValue
+				: maxLength.HasValue ? EnsureMaxLength(s, maxLength.Value) : s;
+		}
+
+		public static string EnsureMaxLength(this string s, int maxLength)
+		{
+			return String.IsNullOrWhiteSpace(s)
+				? s
+				: s.Length > maxLength ? s.Substring(0, maxLength) : s;
+		}
+
+		public static string FormatSyslogAsciiField(this string s, string replacementValue, int maxLength, char[] charBuffer)
+		{
+			s = FormatSyslogField(s, replacementValue, maxLength);
 
 			int bufferIndex = 0;
 			for (int i = 0; i < s.Length; i++)
