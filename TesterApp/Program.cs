@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using CommandLine;
 using SyslogNet;
 using SyslogNet.Client;
@@ -51,16 +52,6 @@ namespace TesterApp
 				{
 					// string exceptionMessage = CreateExceptionMessageLevel1();
 
-					var syslogMessage = new SyslogMessage(
-						DateTimeOffset.Now,
-						Facility.UserLevelMessages,
-						Severity.Error,
-						options.LocalHostName ?? Environment.MachineName,
-						options.AppName,
-						options.ProcId,
-						options.MsgType,
-						options.Message ?? "Test message at " + DateTime.Now);
-
 					ISyslogMessageSerializer serializer = options.SyslogVersion == "5424"
 						? (ISyslogMessageSerializer)new SyslogRfc5424MessageSerializer()
 						: new SyslogRfc3164MessageSerializer();
@@ -69,13 +60,32 @@ namespace TesterApp
 						? (ISyslogMessageSender)new SyslogEncryptedTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
 						: new SyslogUdpSender(options.SyslogServerHostname, options.SyslogServerPort);
 
-					sender.Send(syslogMessage, serializer);
+					SyslogMessage msg1 = CreateSyslogMessage(options);
+					sender.Send(msg1, serializer);
+
+					Thread.Sleep(1000);
+
+					SyslogMessage msg2 = CreateSyslogMessage(options);
+					sender.Send(msg2, serializer);
 				}
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine("ERROR: " + ex);
 			}
+		}
+
+		private static SyslogMessage CreateSyslogMessage(Options options)
+		{
+			return new SyslogMessage(
+				DateTimeOffset.Now,
+				Facility.UserLevelMessages,
+				Severity.Error,
+				options.LocalHostName ?? Environment.MachineName,
+				options.AppName,
+				options.ProcId,
+				options.MsgType,
+				options.Message ?? "Test message at " + DateTime.Now);
 		}
 
 		private static string CreateExceptionMessageLevel1()

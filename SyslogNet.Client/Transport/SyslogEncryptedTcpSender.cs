@@ -6,50 +6,35 @@ using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogEncryptedTcpSender : ISyslogMessageSender, IDisposable
+	public class SyslogEncryptedTcpSender : ISyslogMessageSender
 	{
-		private readonly TcpClient tcpClient;
-		private readonly SslStream sslStream;
+		private readonly string hostname;
+		private readonly int port;
 
 		public SyslogEncryptedTcpSender(string hostname, int port)
 		{
-			try
-			{
-				tcpClient = new TcpClient(hostname, port);
-				sslStream = new SslStream(tcpClient.GetStream(), false, ValidateServerCertificate);
-
-				sslStream.AuthenticateAsClient(hostname);
-			}
-			catch
-			{
-				if (tcpClient != null)
-					((IDisposable)tcpClient).Dispose();
-
-				if (sslStream != null)
-					sslStream.Dispose();
-
-				throw;
-			}
+			this.hostname = hostname;
+			this.port = port;
 		}
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
-			byte[] datagramBytes = serializer.Serialize(message);
-			sslStream.Write(datagramBytes, 0, datagramBytes.Length);
-			sslStream.Flush();
+			// TODO: Does this need to be optimized? There is some mention in the MSDN docs about SslStream reusing cached SSL sessions
+			// Need to be sure this won't cause a huge overhead of re-authenticating for each log message
+
+			using (var tcpClient = new TcpClient(hostname, port))
+			using (var sslStream = new SslStream(tcpClient.GetStream(), false, ValidateServerCertificate))
+			{
+				sslStream.AuthenticateAsClient(hostname);
+
+				byte[] bytes = serializer.Serialize(message);
+				sslStream.Write(bytes, 0, bytes.Length);
+				sslStream.Flush();
+			}
 		}
 
 		// Quick and nasty way to avoid logging framework dependency
 		public static Action<string> CertificateErrorHandler = err => { };
-
-		public void Dispose()
-		{
-			tcpClient.Close();
-			sslStream.Close();
-
-			((IDisposable)tcpClient).Dispose();
-			sslStream.Dispose();
-		}
 
 		private static bool ValidateServerCertificate(
 			object sender,
