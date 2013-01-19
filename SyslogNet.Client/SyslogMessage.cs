@@ -15,6 +15,28 @@ namespace SyslogNet.Client
 		private readonly IEnumerable<StructuredDataElement> structuredDataElements;
 		private readonly DateTimeOffset? dateTimeOffset;
 		
+		/// <summary>
+		/// Constructor for use when sending RFC 3164 messages
+		/// </summary>
+		public SyslogMessage(
+			DateTimeOffset? dateTimeOffset,
+			Facility facility,
+			Severity severity,
+			string hostName,
+			string appName,
+			string message)
+		{
+			this.dateTimeOffset = dateTimeOffset;
+			this.facility = facility;
+			this.severity = severity;
+			this.hostName = hostName;
+			this.appName = appName;
+			this.message = message;
+		}
+
+		/// <summary>
+		/// Constructor for use when sending RFC 5424 messages
+		/// </summary>
 		public SyslogMessage(
 			DateTimeOffset? dateTimeOffset,
 			Facility facility,
@@ -25,15 +47,10 @@ namespace SyslogNet.Client
 			string msgId,
 			string message,
 			params StructuredDataElement[] structuredDataElements)
+			: this(dateTimeOffset, facility, severity, hostName, appName, message)
 		{
-			this.dateTimeOffset = dateTimeOffset;
-			this.facility = facility;
-			this.severity = severity;
-			this.hostName = hostName;
-			this.appName = appName;
 			this.procId = procId;
 			this.msgId = msgId;
-			this.message = message;
 			this.structuredDataElements = structuredDataElements;
 		}
 
