@@ -6,12 +6,12 @@ using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogTcpSender : ISyslogMessageSender, IDisposable
+	public class SyslogEncryptedTcpSender : ISyslogMessageSender, IDisposable
 	{
 		private readonly TcpClient tcpClient;
 		private readonly SslStream sslStream;
 
-		public SyslogTcpSender(string hostname, int port)
+		public SyslogEncryptedTcpSender(string hostname, int port)
 		{
 			try
 			{

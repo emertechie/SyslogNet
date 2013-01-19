@@ -66,7 +66,7 @@ namespace TesterApp
 						: new SyslogRfc3164MessageSerializer();
 
 					ISyslogMessageSender sender = options.NetworkProtocol == "tcp"
-						? (ISyslogMessageSender)new SyslogTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
+						? (ISyslogMessageSender)new SyslogEncryptedTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
 						: new SyslogUdpSender(options.SyslogServerHostname, options.SyslogServerPort);
 
 					sender.Send(syslogMessage, serializer);
