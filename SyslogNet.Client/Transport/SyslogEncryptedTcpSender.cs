@@ -6,35 +6,54 @@ using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogEncryptedTcpSender : ISyslogMessageSender
+	public class SyslogEncryptedTcpSender : ISyslogMessageSender, IDisposable
 	{
-		private readonly string hostname;
-		private readonly int port;
+		private readonly TcpClient tcpClient;
+		private readonly SslStream sslStream;
 
 		public SyslogEncryptedTcpSender(string hostname, int port)
 		{
-			this.hostname = hostname;
-			this.port = port;
+			try
+			{
+				tcpClient = new TcpClient(hostname, port);
+				sslStream = new SslStream(tcpClient.GetStream(), false, ValidateServerCertificate);
+
+				sslStream.AuthenticateAsClient(hostname);
+			}
+			catch
+			{
+				if (tcpClient != null)
+					((IDisposable)tcpClient).Dispose();
+
+				if (sslStream != null)
+					sslStream.Dispose();
+
+				throw;
+			}
 		}
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
-			// TODO: Does this need to be optimized? There is some mention in the MSDN docs about SslStream reusing cached SSL sessions
-			// Need to be sure this won't cause a huge overhead of re-authenticating for each log message
+			byte[] datagramBytes = serializer.Serialize(message);
+			sslStream.Write(datagramBytes, 0, datagramBytes.Length);
 
-			using (var tcpClient = new TcpClient(hostname, port))
-			using (var sslStream = new SslStream(tcpClient.GetStream(), false, ValidateServerCertificate))
-			{
-				sslStream.AuthenticateAsClient(hostname);
+			// Note: since there is no well-defined delimiter for syslog messages, it seems we need to write a null value to signal end of each message
+			sslStream.Write(new byte[] { 0 });
 
-				byte[] bytes = serializer.Serialize(message);
-				sslStream.Write(bytes, 0, bytes.Length);
-				sslStream.Flush();
-			}
+			sslStream.Flush();
 		}
 
 		// Quick and nasty way to avoid logging framework dependency
 		public static Action<string> CertificateErrorHandler = err => { };
+
+		public void Dispose()
+		{
+			tcpClient.Close();
+			sslStream.Close();
+
+			((IDisposable)tcpClient).Dispose();
+			sslStream.Dispose();
+		}
 
 		private static bool ValidateServerCertificate(
 			object sender,

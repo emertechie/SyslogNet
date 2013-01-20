@@ -62,11 +62,13 @@ namespace TesterApp
 
 					SyslogMessage msg1 = CreateSyslogMessage(options);
 					sender.Send(msg1, serializer);
+					Console.WriteLine("Sent message 1");
 
-					Thread.Sleep(1000);
+					Thread.Sleep(5000);
 
 					SyslogMessage msg2 = CreateSyslogMessage(options);
 					sender.Send(msg2, serializer);
+					Console.WriteLine("Sent message 2");
 				}
 			}
 			catch (Exception ex)
