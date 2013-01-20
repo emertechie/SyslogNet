@@ -36,10 +36,6 @@ namespace SyslogNet.Client.Transport
 		{
 			byte[] datagramBytes = serializer.Serialize(message);
 			sslStream.Write(datagramBytes, 0, datagramBytes.Length);
-
-			// Note: since there is no well-defined delimiter for syslog messages, it seems we need to write a null value to signal end of each message
-			sslStream.Write(new byte[] { 0 });
-
 			sslStream.Flush();
 		}
 

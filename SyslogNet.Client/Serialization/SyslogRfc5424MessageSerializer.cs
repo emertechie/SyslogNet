@@ -26,6 +26,7 @@ namespace SyslogNet.Client.Serialization
 			headerBuilder.Append(" ").Append(message.AppName.FormatSyslogAsciiField(NilValue, 48, asciiCharsBuffer));
 			headerBuilder.Append(" ").Append(message.ProcId.FormatSyslogAsciiField(NilValue, 128, asciiCharsBuffer));
 			headerBuilder.Append(" ").Append(message.MsgId.FormatSyslogAsciiField(NilValue, 32, asciiCharsBuffer));
+			headerBuilder.Append("\n");
 
 			// TODO structured data
 

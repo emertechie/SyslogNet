@@ -24,6 +24,7 @@ namespace SyslogNet.Client.Serialization
 			headerBuilder.Append(message.HostName).Append(" ");
 			headerBuilder.Append(message.AppName.IfNotNullOrWhitespace(x => x.EnsureMaxLength(32) + ":"));
 			headerBuilder.Append(message.Message ?? "");
+			headerBuilder.Append("\n");
 
 			byte[] asciiBytes = Encoding.ASCII.GetBytes(headerBuilder.ToString());
 			stream.Write(asciiBytes, 0, asciiBytes.Length);
