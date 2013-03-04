@@ -17,7 +17,8 @@ namespace SyslogNet.Client.Transport
 			try
 			{
 				tcpClient = new TcpClient(hostname, port);
-				sslStream = new SslStream(tcpClient.GetStream(), false, ValidateServerCertificate);
+				tcpClientStream = tcpClient.GetStream();
+				sslStream = new SslStream(tcpClientStream, false, ValidateServerCertificate);
 
 				sslStream.AuthenticateAsClient(hostname);
 
@@ -26,12 +27,7 @@ namespace SyslogNet.Client.Transport
 			}
 			catch
 			{
-				if (tcpClient != null)
-					((IDisposable)tcpClient).Dispose();
-
-				if (sslStream != null)
-					sslStream.Dispose();
-
+				Dispose();
 				throw;
 			}
 		}
@@ -41,18 +37,68 @@ namespace SyslogNet.Client.Transport
 			byte[] datagramBytes = serializer.Serialize(message);
 			sslStream.Write(datagramBytes, 0, datagramBytes.Length);
 			sslStream.Flush();
+			tcpClientStream.Flush();
+
+			// Note: This doesn't work reliably. Can't seem to find a method which does
+			if (!tcpClient.Connected)
+				throw new CommunicationsException("Could not send message because client was disconnected");
+
+			/* None of these methods work reliably either (at least when disabling wifi on laptop):
+			if (!IsConnected(tcpClient.Client))
+				throw new Exception("Foo");
+
+			var isConnected = !(tcpClient.Client.Poll(1, SelectMode.SelectRead) && tcpClient.Client.Available == 0);
+			if (!isConnected)
+				throw new CommunicationsException("Foo");
+
+			if (tcpClient.Client.Poll(100, SelectMode.SelectError))
+				throw new CommunicationsException("Could not send message");*/
 		}
+
+		/*// From: http://msdn.microsoft.com/en-us/library/system.net.sockets.socket.connected.aspx
+		private static bool IsConnected(Socket client)
+		{
+			// This is how you can determine whether a socket is still connected. 
+			var blockingState = client.Blocking;
+			try
+			{
+				byte[] tmp = new byte[1];
+
+				client.Blocking = false;
+				client.Send(tmp, 0, 0);
+				return true;
+			}
+			catch (SocketException e)
+			{
+				// 10035 == WSAEWOULDBLOCK 
+				return e.NativeErrorCode.Equals(10035);
+			}
+			finally
+			{
+				client.Blocking = blockingState;
+			}
+		}*/
 
 		// Quick and nasty way to avoid logging framework dependency
 		public static Action<string> CertificateErrorHandler = err => { };
+		private readonly NetworkStream tcpClientStream;
 
 		public void Dispose()
 		{
-			tcpClient.Close();
-			sslStream.Close();
+			if (tcpClient != null)
+			{
+				tcpClient.Close();
+				((IDisposable)tcpClient).Dispose();
+			}
 
-			((IDisposable)tcpClient).Dispose();
-			sslStream.Dispose();
+			if (tcpClientStream != null)
+				tcpClientStream.Dispose();
+
+			if (sslStream != null)
+			{
+				sslStream.Close();
+				sslStream.Dispose();
+			}
 		}
 
 		private static bool ValidateServerCertificate(
