@@ -1,6 +1,7 @@
 using System;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security;
 using System.Security.Cryptography.X509Certificates;
 using SyslogNet.Client.Serialization;
 
@@ -19,6 +20,9 @@ namespace SyslogNet.Client.Transport
 				sslStream = new SslStream(tcpClient.GetStream(), false, ValidateServerCertificate);
 
 				sslStream.AuthenticateAsClient(hostname);
+
+				if (!sslStream.IsEncrypted)
+					throw new SecurityException("Could not establish an encrypted connection");
 			}
 			catch
 			{
