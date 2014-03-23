@@ -6,7 +6,7 @@
 		<title>SyslogNet.Client</title>
 		<authors>Andrew Smith</authors>
 		<owners>Andrew Smith</owners>
-		<projectUrl>https://bitbucket.org/emertechie/syslognet</projectUrl>
+		<projectUrl>https://github.com/emertechie/SyslogNet</projectUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>.Net Syslog client. Supports both RFC 3164 and RFC 5424 Syslog standards as well as UDP and encrypted TCP transports.</description>
 		<copyright>Copyright 2013</copyright>
