@@ -1,9 +1,10 @@
+using SyslogNet.Client.Serialization;
 using System;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security;
 using System.Security.Cryptography.X509Certificates;
-using SyslogNet.Client.Serialization;
+using System.Threading;
 
 namespace SyslogNet.Client.Transport
 {
@@ -12,13 +13,16 @@ namespace SyslogNet.Client.Transport
 		private readonly TcpClient tcpClient;
 		private readonly SslStream sslStream;
 
-		public SyslogEncryptedTcpSender(string hostname, int port)
+        public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite)
 		{
 			try
 			{
 				tcpClient = new TcpClient(hostname, port);
 				tcpClientStream = tcpClient.GetStream();
 				sslStream = new SslStream(tcpClientStream, false, ValidateServerCertificate);
+
+			    sslStream.ReadTimeout = timeout;
+			    sslStream.WriteTimeout = timeout;
 
 				sslStream.AuthenticateAsClient(hostname);
 
