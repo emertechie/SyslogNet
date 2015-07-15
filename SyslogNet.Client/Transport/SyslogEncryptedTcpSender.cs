@@ -13,19 +13,19 @@ namespace SyslogNet.Client.Transport
 		private readonly TcpClient tcpClient;
 		private readonly SslStream sslStream;
 
-        public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite)
+		public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite)
 		{
 			try
 			{
 				tcpClient = new TcpClient(hostname, port);
 				tcpClientStream = tcpClient.GetStream();
-			    sslStream = new SslStream(tcpClientStream, false, ValidateServerCertificate)
-			    {
-			        ReadTimeout = timeout,
-			        WriteTimeout = timeout
-			    };
+				sslStream = new SslStream(tcpClientStream, false, ValidateServerCertificate)
+				{
+					ReadTimeout = timeout,
+					WriteTimeout = timeout
+				};
 
-			    sslStream.AuthenticateAsClient(hostname);
+				sslStream.AuthenticateAsClient(hostname);
 
 				if (!sslStream.IsEncrypted)
 					throw new SecurityException("Could not establish an encrypted connection");

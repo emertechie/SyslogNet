@@ -7,7 +7,7 @@ namespace SyslogNet.Client.Transport
 	public class SyslogTcpSender : ISyslogMessageSender, IDisposable
 	{
 		private readonly TcpClient tcpClient;
-        private readonly NetworkStream tcpClientStream;
+		private readonly NetworkStream tcpClientStream;
 
 		public SyslogTcpSender(string hostname, int port)
 		{
@@ -26,7 +26,8 @@ namespace SyslogNet.Client.Transport
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
 			var datagramBytes = serializer.Serialize(message);
-            tcpClientStream.Write(datagramBytes, 0, datagramBytes.Length);
+
+			tcpClientStream.Write(datagramBytes, 0, datagramBytes.Length);
 			tcpClientStream.Flush();
 
 			// Note: This doesn't work reliably. Can't seem to find a method which does
