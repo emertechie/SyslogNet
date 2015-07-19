@@ -6,5 +6,6 @@ namespace SyslogNet.Client.Transport
 	public interface ISyslogMessageSender : IDisposable
 	{
 		void Send(SyslogMessage message, ISyslogMessageSerializer serializer);
+		void Send(SyslogMessage[] messages, ISyslogMessageSerializer serializer);
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Net.Sockets;
+using System.Text;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
@@ -17,6 +18,14 @@ namespace SyslogNet.Client.Transport
 		{
 			byte[] datagramBytes = serializer.Serialize(message);
 			udpClient.Send(datagramBytes, datagramBytes.Length);
+		}
+
+		public void Send(SyslogMessage[] messages, ISyslogMessageSerializer serializer)
+		{
+			foreach(SyslogMessage message in messages)
+			{
+				Send(message, serializer);
+			}
 		}
 
 		public void Dispose()

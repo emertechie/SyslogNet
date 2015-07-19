@@ -63,6 +63,17 @@ namespace SyslogNet.Client.Transport
 				transportStream.Flush();
 		}
 
+		public void Send(SyslogMessage[] messages, ISyslogMessageSerializer serializer)
+		{
+			foreach (SyslogMessage message in messages)
+			{
+				Send(message, serializer, false);
+			}
+
+			if (!(transportStream is NetworkStream))
+				transportStream.Flush();
+		}
+
 		public void Dispose()
 		{
 			if (transportStream != null)
