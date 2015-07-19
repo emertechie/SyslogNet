@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -63,7 +64,7 @@ namespace SyslogNet.Client.Transport
 				transportStream.Flush();
 		}
 
-		public void Send(SyslogMessage[] messages, ISyslogMessageSerializer serializer)
+		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
 		{
 			foreach (SyslogMessage message in messages)
 			{
