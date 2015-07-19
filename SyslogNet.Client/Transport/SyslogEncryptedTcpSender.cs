@@ -8,6 +8,8 @@ namespace SyslogNet.Client.Transport
 {
 	public class SyslogEncryptedTcpSender : SyslogTcpSender
 	{
+		public Boolean IgnoreTLSChainErrors { get; private set; }
+
 		protected MessageTransfer _messageTransfer;
 		public MessageTransfer messageTransfer
 		{
@@ -23,20 +25,27 @@ namespace SyslogNet.Client.Transport
 			}
 		}
 
-		public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite) : base(hostname, port)
+		public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite, bool ignoreChainErrors = false) : base(hostname, port)
 		{
+			IgnoreTLSChainErrors = ignoreChainErrors;
 			startTLS(hostname, timeout);
 		}
 
 		private void startTLS(String hostname, int timeout)
 		{
-			transportStream = new SslStream(tcpClient.GetStream(), false, ValidateServerCertificate)
+			transportStream = new SslStream(tcpClient.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate))
 			{
 				ReadTimeout = timeout,
 				WriteTimeout = timeout
 			};
 
-			((SslStream)transportStream).AuthenticateAsClient(hostname);
+			// According to RFC 5425 we MUST support TLS 1.2, but this protocol version only implemented in framework 4.5 and Windows Vista+...
+			((SslStream)transportStream).AuthenticateAsClient(
+				hostname,
+				null,
+				System.Security.Authentication.SslProtocols.Tls,
+				false
+			);
 
 			if (!((SslStream)transportStream).IsEncrypted)
 				throw new SecurityException("Could not establish an encrypted connection");
@@ -44,9 +53,9 @@ namespace SyslogNet.Client.Transport
 			messageTransfer = MessageTransfer.OctetCounting;
 		}
 
-		private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+		private bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
 		{
-			if (sslPolicyErrors == SslPolicyErrors.None)
+			if (sslPolicyErrors == SslPolicyErrors.None || (IgnoreTLSChainErrors && sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors))
 				return true;
 
 			CertificateErrorHandler(String.Format("Certificate error: {0}", sslPolicyErrors));
