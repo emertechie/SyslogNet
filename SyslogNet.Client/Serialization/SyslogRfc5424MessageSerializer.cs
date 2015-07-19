@@ -29,7 +29,6 @@ namespace SyslogNet.Client.Serialization
 			messageBuilder.Append(" ").Append(message.AppName.FormatSyslogAsciiField(NilValue, 48, asciiCharsBuffer));
 			messageBuilder.Append(" ").Append(message.ProcId.FormatSyslogAsciiField(NilValue, 128, asciiCharsBuffer));
 			messageBuilder.Append(" ").Append(message.MsgId.FormatSyslogAsciiField(NilValue, 32, asciiCharsBuffer));
-			messageBuilder.Append("\n");
 
 			writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
 
