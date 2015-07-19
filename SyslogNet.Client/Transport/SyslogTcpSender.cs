@@ -23,11 +23,11 @@ namespace SyslogNet.Client.Transport
 		{
 			try
 			{
-				messageTransfer = MessageTransfer.OctetCounting;
-				trailer = 10; // LF
-
 				tcpClient = new TcpClient(hostname, port);
 				transportStream = tcpClient.GetStream();
+
+				messageTransfer = MessageTransfer.OctetCounting;
+				trailer = 10; // LF
 			}
 			catch
 			{
