@@ -1,81 +1,33 @@
-using SyslogNet.Client.Serialization;
-using System;
+﻿using System;
 using System.Net.Security;
-using System.Net.Sockets;
 using System.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogEncryptedTcpSender : ISyslogMessageSender, IDisposable
+	public class SyslogEncryptedTcpSender : SyslogTcpSender
 	{
-		private readonly TcpClient tcpClient;
-		private readonly SslStream sslStream;
-
-		public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite)
+		public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite) : base(hostname, port)
 		{
-			try
-			{
-				tcpClient = new TcpClient(hostname, port);
-				tcpClientStream = tcpClient.GetStream();
-				sslStream = new SslStream(tcpClientStream, false, ValidateServerCertificate)
-				{
-					ReadTimeout = timeout,
-					WriteTimeout = timeout
-				};
-
-				sslStream.AuthenticateAsClient(hostname);
-
-				if (!sslStream.IsEncrypted)
-					throw new SecurityException("Could not establish an encrypted connection");
-			}
-			catch
-			{
-				Dispose();
-				throw;
-			}
+			startTLS(hostname, timeout);
 		}
 
-		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
+		private void startTLS(String hostname, int timeout)
 		{
-			byte[] datagramBytes = serializer.Serialize(message);
-			sslStream.Write(datagramBytes, 0, datagramBytes.Length);
-			sslStream.Flush();
-			tcpClientStream.Flush();
+			transportStream = new SslStream(tcpClient.GetStream(), false, ValidateServerCertificate)
+			{
+				ReadTimeout = timeout,
+				WriteTimeout = timeout
+			};
 
-			// Note: This doesn't work reliably. Can't seem to find a method which does
-			if (!tcpClient.Connected)
-				throw new CommunicationsException("Could not send message because client was disconnected");
+			((SslStream)transportStream).AuthenticateAsClient(hostname);
+
+			if (!((SslStream)transportStream).IsEncrypted)
+				throw new SecurityException("Could not establish an encrypted connection");
 		}
 
-		// Quick and nasty way to avoid logging framework dependency
-		public static Action<string> CertificateErrorHandler = err => { };
-		private readonly NetworkStream tcpClientStream;
-
-		public void Dispose()
-		{
-			if (tcpClient != null)
-			{
-				tcpClient.Close();
-				((IDisposable)tcpClient).Dispose();
-			}
-
-			if (tcpClientStream != null)
-				tcpClientStream.Dispose();
-
-			if (sslStream != null)
-			{
-				sslStream.Close();
-				sslStream.Dispose();
-			}
-		}
-
-		private static bool ValidateServerCertificate(
-			object sender,
-			X509Certificate certificate,
-			X509Chain chain,
-			SslPolicyErrors sslPolicyErrors)
+		private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
 		{
 			if (sslPolicyErrors == SslPolicyErrors.None)
 				return true;
@@ -83,5 +35,8 @@ namespace SyslogNet.Client.Transport
 			CertificateErrorHandler(String.Format("Certificate error: {0}", sslPolicyErrors));
 			return false;
 		}
+
+		// Quick and nasty way to avoid logging framework dependency
+		public static Action<string> CertificateErrorHandler = err => { };
 	}
 }

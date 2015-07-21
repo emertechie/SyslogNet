@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Sockets;
 using SyslogNet.Client.Serialization;
 
@@ -6,15 +7,15 @@ namespace SyslogNet.Client.Transport
 {
 	public class SyslogTcpSender : ISyslogMessageSender, IDisposable
 	{
-		private readonly TcpClient tcpClient;
-		private readonly NetworkStream tcpClientStream;
+		protected readonly TcpClient tcpClient;
+		protected Stream transportStream;
 
 		public SyslogTcpSender(string hostname, int port)
 		{
 			try
 			{
 				tcpClient = new TcpClient(hostname, port);
-				tcpClientStream = tcpClient.GetStream();
+				transportStream = tcpClient.GetStream();
 			}
 			catch
 			{
@@ -25,20 +26,25 @@ namespace SyslogNet.Client.Transport
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
+			Send(message, serializer, true);
+		}
+
+		protected void Send(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush = true)
+		{
 			var datagramBytes = serializer.Serialize(message);
-			tcpClientStream.Write(datagramBytes, 0, datagramBytes.Length);
+			transportStream.Write(datagramBytes, 0, datagramBytes.Length);
+
+			if (flush && !(transportStream is NetworkStream))
+				transportStream.Flush();
 		}
 
 		public void Dispose()
 		{
-			if (tcpClient != null)
-			{
-				tcpClient.Close();
-				((IDisposable)tcpClient).Dispose();
-			}
+			if (transportStream != null)
+				transportStream.Close();
 
-			if (tcpClientStream != null)
-				tcpClientStream.Dispose();
+			if (tcpClient != null)
+				tcpClient.Close();
 		}
 	}
 }
