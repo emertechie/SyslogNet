@@ -29,6 +29,8 @@ namespace SyslogNet.Client.Transport
 			}
 		}
 
+		public void Reconnect() { /* UDP is connectionless */ }
+
 		public void Dispose()
 		{
 			udpClient.Close();
