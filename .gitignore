@@ -41,3 +41,5 @@ obj
 packages
 .idea
 
+*.nupkg
+*.nuspec
