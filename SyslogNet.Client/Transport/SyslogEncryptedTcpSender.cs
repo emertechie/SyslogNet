@@ -11,7 +11,7 @@ namespace SyslogNet.Client.Transport
 		public Boolean IgnoreTLSChainErrors { get; private set; }
 
 		protected MessageTransfer _messageTransfer;
-		public MessageTransfer messageTransfer
+		public override MessageTransfer messageTransfer
 		{
 			get { return _messageTransfer; }
 			set
