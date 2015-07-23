@@ -1,87 +1,68 @@
-using SyslogNet.Client.Serialization;
-using System;
+﻿using System;
 using System.Net.Security;
-using System.Net.Sockets;
 using System.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogEncryptedTcpSender : ISyslogMessageSender, IDisposable
+	public class SyslogEncryptedTcpSender : SyslogTcpSender
 	{
-		private readonly TcpClient tcpClient;
-		private readonly SslStream sslStream;
+		public Boolean IgnoreTLSChainErrors { get; private set; }
 
-        public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite)
+		protected MessageTransfer _messageTransfer;
+		public MessageTransfer messageTransfer
 		{
-			try
+			get { return _messageTransfer; }
+			set
 			{
-				tcpClient = new TcpClient(hostname, port);
-				tcpClientStream = tcpClient.GetStream();
-			    sslStream = new SslStream(tcpClientStream, false, ValidateServerCertificate)
-			    {
-			        ReadTimeout = timeout,
-			        WriteTimeout = timeout
-			    };
+				if (!value.Equals(MessageTransfer.OctetCounting) && transportStream is SslStream)
+				{
+					throw new SyslogTransportException("Non-Transparent-Framing can not be used with TLS transport");
+				}
 
-			    sslStream.AuthenticateAsClient(hostname);
-
-				if (!sslStream.IsEncrypted)
-					throw new SecurityException("Could not establish an encrypted connection");
-			}
-			catch
-			{
-				Dispose();
-				throw;
+				_messageTransfer = value;
 			}
 		}
 
-		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
+		public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite, bool ignoreChainErrors = false) : base(hostname, port)
 		{
-			byte[] datagramBytes = serializer.Serialize(message);
-			sslStream.Write(datagramBytes, 0, datagramBytes.Length);
-			sslStream.Flush();
-			tcpClientStream.Flush();
-
-			// Note: This doesn't work reliably. Can't seem to find a method which does
-			if (!tcpClient.Connected)
-				throw new CommunicationsException("Could not send message because client was disconnected");
+			IgnoreTLSChainErrors = ignoreChainErrors;
+			startTLS(hostname, timeout);
 		}
 
-		// Quick and nasty way to avoid logging framework dependency
-		public static Action<string> CertificateErrorHandler = err => { };
-		private readonly NetworkStream tcpClientStream;
-
-		public void Dispose()
+		private void startTLS(String hostname, int timeout)
 		{
-			if (tcpClient != null)
+			transportStream = new SslStream(tcpClient.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate))
 			{
-				tcpClient.Close();
-				((IDisposable)tcpClient).Dispose();
-			}
+				ReadTimeout = timeout,
+				WriteTimeout = timeout
+			};
 
-			if (tcpClientStream != null)
-				tcpClientStream.Dispose();
+			// According to RFC 5425 we MUST support TLS 1.2, but this protocol version only implemented in framework 4.5 and Windows Vista+...
+			((SslStream)transportStream).AuthenticateAsClient(
+				hostname,
+				null,
+				System.Security.Authentication.SslProtocols.Tls,
+				false
+			);
 
-			if (sslStream != null)
-			{
-				sslStream.Close();
-				sslStream.Dispose();
-			}
+			if (!((SslStream)transportStream).IsEncrypted)
+				throw new SecurityException("Could not establish an encrypted connection");
+
+			messageTransfer = MessageTransfer.OctetCounting;
 		}
 
-		private static bool ValidateServerCertificate(
-			object sender,
-			X509Certificate certificate,
-			X509Chain chain,
-			SslPolicyErrors sslPolicyErrors)
+		private bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
 		{
-			if (sslPolicyErrors == SslPolicyErrors.None)
+			if (sslPolicyErrors == SslPolicyErrors.None || (IgnoreTLSChainErrors && sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors))
 				return true;
 
 			CertificateErrorHandler(String.Format("Certificate error: {0}", sslPolicyErrors));
 			return false;
 		}
+
+		// Quick and nasty way to avoid logging framework dependency
+		public static Action<string> CertificateErrorHandler = err => { };
 	}
 }

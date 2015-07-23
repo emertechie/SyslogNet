@@ -58,6 +58,7 @@
     <Compile Include="Transport\ISyslogMessageSender.cs" />
     <Compile Include="Transport\SyslogTcpSender.cs" />
     <Compile Include="Transport\SyslogEncryptedTcpSender.cs" />
+    <Compile Include="Transport\SyslogTransportException.cs" />
     <Compile Include="Transport\SyslogUdpSender.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
