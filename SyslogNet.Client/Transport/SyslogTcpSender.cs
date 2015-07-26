@@ -17,7 +17,7 @@ namespace SyslogNet.Client.Transport
 		protected readonly TcpClient tcpClient;
 		protected Stream transportStream;
 
-		public MessageTransfer messageTransfer { get; set; }
+		public virtual MessageTransfer messageTransfer { get; set; }
 		public byte trailer { get; set; }
 
 		public SyslogTcpSender(string hostname, int port)
