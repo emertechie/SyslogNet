@@ -8,6 +8,7 @@ namespace SyslogNet.Client.Transport
 {
 	public class SyslogEncryptedTcpSender : SyslogTcpSender
 	{
+		protected int IOTimeout;
 		public Boolean IgnoreTLSChainErrors { get; private set; }
 
 		protected MessageTransfer _messageTransfer;
@@ -27,16 +28,23 @@ namespace SyslogNet.Client.Transport
 
 		public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite, bool ignoreChainErrors = false) : base(hostname, port)
 		{
+			IOTimeout = timeout;
 			IgnoreTLSChainErrors = ignoreChainErrors;
-			startTLS(hostname, timeout);
+			startTLS();
 		}
 
-		private void startTLS(String hostname, int timeout)
+		public override void Reconnect()
+		{
+			base.Reconnect();
+			startTLS();
+		}
+
+		private void startTLS()
 		{
 			transportStream = new SslStream(tcpClient.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate))
 			{
-				ReadTimeout = timeout,
-				WriteTimeout = timeout
+				ReadTimeout = IOTimeout,
+				WriteTimeout = IOTimeout
 			};
 
 			// According to RFC 5425 we MUST support TLS 1.2, but this protocol version only implemented in framework 4.5 and Windows Vista+...

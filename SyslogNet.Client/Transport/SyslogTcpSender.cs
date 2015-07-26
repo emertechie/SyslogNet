@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
@@ -14,27 +15,44 @@ namespace SyslogNet.Client.Transport
 
 	public class SyslogTcpSender : ISyslogMessageSender, IDisposable
 	{
-		protected readonly TcpClient tcpClient;
-		protected Stream transportStream;
+		protected String hostname;
+		protected int port;
+
+		protected TcpClient tcpClient = null;
+		protected Stream transportStream = null;
 
 		public virtual MessageTransfer messageTransfer { get; set; }
 		public byte trailer { get; set; }
 
 		public SyslogTcpSender(string hostname, int port)
 		{
+			this.hostname = hostname;
+			this.port = port;
+
+			Connect();
+
+			messageTransfer = MessageTransfer.OctetCounting;
+			trailer = 10; // LF
+		}
+
+		protected void Connect()
+		{
 			try
 			{
 				tcpClient = new TcpClient(hostname, port);
 				transportStream = tcpClient.GetStream();
-
-				messageTransfer = MessageTransfer.OctetCounting;
-				trailer = 10; // LF
 			}
 			catch
 			{
 				Dispose();
 				throw;
 			}
+		}
+
+		public virtual void Reconnect()
+		{
+			Dispose();
+			Connect();
 		}
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
@@ -44,6 +62,11 @@ namespace SyslogNet.Client.Transport
 
 		protected void Send(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush = true)
 		{
+			if(transportStream == null)
+			{
+				throw new IOException("No transport stream exists");
+			}
+
 			var datagramBytes = serializer.Serialize(message);
 
 			if (messageTransfer.Equals(MessageTransfer.OctetCounting))
@@ -78,10 +101,16 @@ namespace SyslogNet.Client.Transport
 		public void Dispose()
 		{
 			if (transportStream != null)
+			{
 				transportStream.Close();
+				transportStream = null;
+			}
 
 			if (tcpClient != null)
+			{
 				tcpClient.Close();
+				tcpClient = null;
+			}
 		}
 	}
 }
