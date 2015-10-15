@@ -15,6 +15,35 @@ namespace SyslogNet.Client
 		private readonly IEnumerable<StructuredDataElement> structuredDataElements;
 		private readonly DateTimeOffset? dateTimeOffset;
 		
+		public static Facility DefaultFacility = Facility.UserLevelMessages;
+		public static Severity DefaultSeverity = Severity.Informational;
+
+		/// <summary>
+		/// Convenience overload for sending local syslog messages with default facility (UserLevelMessages)
+		/// </summary>
+		public SyslogMessage(
+			Severity severity,
+			string appName,
+			string message)
+		: this(DefaultFacility, severity, appName, message)
+		{
+		}
+
+		/// <summary>
+		/// Constructor for use when sending local syslog messages
+		/// </summary>
+		public SyslogMessage(
+			Facility facility,
+			Severity severity,
+			string appName,
+			string message)
+		{
+			this.facility = facility;
+			this.severity = severity;
+			this.appName = appName;
+			this.message = message;
+		}
+
 		/// <summary>
 		/// Constructor for use when sending RFC 3164 messages
 		/// </summary>

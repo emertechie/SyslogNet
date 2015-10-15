@@ -50,6 +50,7 @@
     <Compile Include="Serialization\SyslogRfc3164MessageSerializerTests.cs" />
     <Compile Include="Serialization\SyslogSerializerExtensionsForTests.cs" />
     <Compile Include="Serialization\SyslogRfc5424MessageSerializerTests.cs" />
+    <Compile Include="Serialization\SyslogLocalMessageSerializerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
