@@ -31,10 +31,10 @@ namespace TesterApp
 		[Option("r", "syslogPort", Required = true, HelpText = "The syslog server port")]
 		public int SyslogServerPort { get; set; }
 
-		[Option("v", "version", Required = false, DefaultValue = "5424", HelpText = "The version of syslog protocol to use. Possible values are '3164' and '5424' (from corresponding RFC documents). Default is '5424'")]
+		[Option("v", "version", Required = false, DefaultValue = "5424", HelpText = "The version of syslog protocol to use. Possible values are '3164' and '5424' (from corresponding RFC documents) or 'local' to send messages to a local syslog (only on Linux or OS X). Default is '5424'")]
 		public string SyslogVersion { get; set; }
 
-		[Option("o", "protocol", Required = false, DefaultValue = "tcp", HelpText = "The network protocol to use. Possible values are 'tcp' or 'udp'. Default is 'tcp'. Note: TCP always uses SSL connection.")]
+		[Option("o", "protocol", Required = false, DefaultValue = "tcp", HelpText = "The network protocol to use. Possible values are 'tcp' or 'udp' to send to a remote syslog server, or 'local' to send to a local syslog over Unix sockets (only on Linux or OS X). Default is 'tcp'. Note: TCP always uses SSL connection.")]
 		public string NetworkProtocol { get; set; }
 
 		[Option("c", "cert", Required = false, HelpText = "Optional path to a CA certificate used to verify Syslog server certificate when using TCP protocol")]
@@ -54,11 +54,15 @@ namespace TesterApp
 
 					ISyslogMessageSerializer serializer = options.SyslogVersion == "5424"
 						? (ISyslogMessageSerializer)new SyslogRfc5424MessageSerializer()
-						: new SyslogRfc3164MessageSerializer();
+						: options.SyslogVersion == "3164"
+							? (ISyslogMessageSerializer)new SyslogRfc3164MessageSerializer()
+							: (ISyslogMessageSerializer)new SyslogLocalMessageSerializer();
 
 					ISyslogMessageSender sender = options.NetworkProtocol == "tcp"
 						? (ISyslogMessageSender)new SyslogEncryptedTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
-						: new SyslogUdpSender(options.SyslogServerHostname, options.SyslogServerPort);
+						: options.NetworkProtocol == "udp"
+							? (ISyslogMessageSender)new SyslogUdpSender(options.SyslogServerHostname, options.SyslogServerPort)
+							: (ISyslogMessageSender)new SyslogLocalSender();
 
 					SyslogMessage msg1 = CreateSyslogMessage(options);
 					sender.Send(msg1, serializer);
