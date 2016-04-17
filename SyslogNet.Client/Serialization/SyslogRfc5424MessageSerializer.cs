@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace SyslogNet.Client.Serialization
@@ -32,40 +33,7 @@ namespace SyslogNet.Client.Serialization
 
 			writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
 
-			// Structured data
-			foreach(StructuredDataElement sdElement in message.StructuredDataElements)
-			{
-				messageBuilder.Clear()
-					.Append(" ")
-					.Append("[")
-					.Append(sdElement.SdId.FormatSyslogSdnameField(asciiCharsBuffer));
-
-				writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
-
-				foreach(System.Collections.Generic.KeyValuePair<string, string> sdParam in sdElement.Parameters)
-				{
-					messageBuilder.Clear()
-						.Append(" ")
-						.Append(sdParam.Key.FormatSyslogSdnameField(asciiCharsBuffer))
-						.Append("=")
-						.Append("\"")
-						.Append(
-							sdParam.Value != null ?
-								sdParam.Value
-									.Replace("\\", "\\\\")
-									.Replace("\"", "\\\"")
-									.Replace("]", "\\]")
-								:
-								String.Empty
-						)
-						.Append("\"");
-
-					writeStream(stream, Encoding.UTF8, messageBuilder.ToString());
-				}
-
-				// ]
-				stream.WriteByte(93);
-			}
+			AddStructuredData(message, stream, messageBuilder);
 
 			if (!String.IsNullOrWhiteSpace(message.Message))
 			{
@@ -74,6 +42,54 @@ namespace SyslogNet.Client.Serialization
 
 				stream.Write(Encoding.UTF8.GetPreamble(), 0, Encoding.UTF8.GetPreamble().Length);
 				writeStream(stream, Encoding.UTF8, message.Message);
+			}
+		}
+
+		private void AddStructuredData(SyslogMessage message, Stream stream, StringBuilder messageBuilder)
+		{
+			// Structured data
+			var structuredData = message.StructuredDataElements.ToList();
+			if (structuredData.Any())
+			{
+				foreach (StructuredDataElement sdElement in structuredData)
+				{
+					messageBuilder.Clear()
+						.Append(" ")
+						.Append("[")
+						.Append(sdElement.SdId.FormatSyslogSdnameField(asciiCharsBuffer));
+
+					writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
+
+					foreach(System.Collections.Generic.KeyValuePair<string, string> sdParam in sdElement.Parameters)
+					{
+						messageBuilder.Clear()
+							.Append(" ")
+							.Append(sdParam.Key.FormatSyslogSdnameField(asciiCharsBuffer))
+							.Append("=")
+							.Append("\"")
+							.Append(
+								sdParam.Value != null ?
+								sdParam.Value
+										.Replace("\\", "\\\\")
+										.Replace("\"", "\\\"")
+										.Replace("]", "\\]")
+									:
+									String.Empty
+							)
+							.Append("\"");
+
+						writeStream(stream, Encoding.UTF8, messageBuilder.ToString());
+					}
+
+					// ]
+					stream.WriteByte(93);
+				}
+			}
+			else
+			{
+				// " -"
+				writeStream(stream, Encoding.ASCII, " ");
+				writeStream(stream, Encoding.ASCII, NilValue);
 			}
 		}
 
