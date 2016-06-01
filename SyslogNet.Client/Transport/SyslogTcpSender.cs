@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
@@ -60,32 +59,37 @@ namespace SyslogNet.Client.Transport
 			Send(message, serializer, true);
 		}
 
-		protected void Send(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush = true)
-		{
-			if(transportStream == null)
-			{
-				throw new IOException("No transport stream exists");
-			}
+        protected void Send(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush = true)
+        {
+            if (transportStream == null)
+            {
+                throw new IOException("No transport stream exists");
+            }
 
-			var datagramBytes = serializer.Serialize(message);
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                var datagramBytes = serializer.Serialize(message);
 
-			if (messageTransfer.Equals(MessageTransfer.OctetCounting))
-			{
-				byte[] messageLength = Encoding.ASCII.GetBytes(datagramBytes.Length.ToString());
-				transportStream.Write(messageLength, 0, messageLength.Length);
-				transportStream.WriteByte(32); // Space
-			}
+                if (messageTransfer.Equals(MessageTransfer.OctetCounting))
+                {
+                    byte[] messageLength = Encoding.ASCII.GetBytes(datagramBytes.Length.ToString());
+                    memoryStream.Write(messageLength, 0, messageLength.Length);
+                    memoryStream.WriteByte(32); // Space
+                }
 
-			transportStream.Write(datagramBytes, 0, datagramBytes.Length);
+                memoryStream.Write(datagramBytes, 0, datagramBytes.Length);
 
-			if (messageTransfer.Equals(MessageTransfer.NonTransparentFraming))
-			{
-				transportStream.WriteByte(trailer); // LF
-			}
+                if (messageTransfer.Equals(MessageTransfer.NonTransparentFraming))
+                {
+                    memoryStream.WriteByte(trailer); // LF
+                }
 
-			if (flush && !(transportStream is NetworkStream))
-				transportStream.Flush();
-		}
+                transportStream.Write(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
+            }
+
+            if (flush && !(transportStream is NetworkStream))
+                transportStream.Flush();
+        }
 
 		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
 		{
