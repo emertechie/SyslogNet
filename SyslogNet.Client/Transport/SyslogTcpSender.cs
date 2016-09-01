@@ -24,14 +24,14 @@ namespace SyslogNet.Client.Transport
 		public virtual MessageTransfer messageTransfer { get; set; }
 		public byte trailer { get; set; }
 
-		public SyslogTcpSender(string hostname, int port)
+        public SyslogTcpSender(string hostname, int port, MessageTransfer messageTransferMethod = MessageTransfer.OctetCounting)
 		{
 			this.hostname = hostname;
 			this.port = port;
 
 			Connect();
 
-			messageTransfer = MessageTransfer.OctetCounting;
+            messageTransfer = messageTransferMethod;
 			trailer = 10; // LF
 		}
 

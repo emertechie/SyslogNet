@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -15,7 +16,7 @@ namespace SyslogNet.Client.Serialization
 			{
 				var dt = message.DateTimeOffset.Value;
 				var day = dt.Day < 10 ? " " + dt.Day : dt.Day.ToString(); // Yes, this is stupid but it's in the spec
-				timestamp = String.Concat(dt.ToString("MMM "), day, dt.ToString(" HH:mm:ss"));
+                timestamp = String.Concat(dt.ToString("MMM ", CultureInfo.CreateSpecificCulture("en-US")), day, dt.ToString(" HH:mm:ss"));
 			}
 
 			var headerBuilder = new StringBuilder();
@@ -25,7 +26,7 @@ namespace SyslogNet.Client.Serialization
 			headerBuilder.Append(message.AppName.IfNotNullOrWhitespace(x => x.EnsureMaxLength(32) + ":"));
 			headerBuilder.Append(message.Message ?? "");
 
-			byte[] asciiBytes = Encoding.ASCII.GetBytes(headerBuilder.ToString());
+			byte[] asciiBytes = Encoding.UTF8.GetBytes(headerBuilder.ToString());
 			stream.Write(asciiBytes, 0, asciiBytes.Length);
 		}
 	}
