@@ -38,6 +38,8 @@ _build
 _logs
 bin
 obj
+obj_netcore
+obj_netstandard
 packages
 .idea
 

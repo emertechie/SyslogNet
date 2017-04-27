@@ -39,8 +39,13 @@ namespace SyslogNet.Client.Transport
 		{
 			try
 			{
-				tcpClient = new TcpClient(hostname, port);
-				transportStream = tcpClient.GetStream();
+#if NET4_0
+                tcpClient = new TcpClient(hostname, port);
+#else
+                tcpClient = new TcpClient(AddressFamily.InterNetwork);
+                tcpClient.ConnectAsync(hostname, port).Wait();
+#endif
+                transportStream = tcpClient.GetStream();
 			}
 			catch
 			{
@@ -85,8 +90,17 @@ namespace SyslogNet.Client.Transport
 					memoryStream.WriteByte(trailer); // LF
 				}
 
-				transportStream.Write(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
-			}
+#if NET4_0
+                transportStream.Write(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
+#else
+                ArraySegment<byte> buffer;
+                
+                if(memoryStream.TryGetBuffer(out buffer))
+                {
+                    transportStream.Write(buffer.Array, 0, buffer.Count);
+                }
+#endif
+            }
 
 			if (flush && !(transportStream is NetworkStream))
 				transportStream.Flush();
@@ -107,14 +121,22 @@ namespace SyslogNet.Client.Transport
 		{
 			if (transportStream != null)
 			{
-				transportStream.Close();
-				transportStream = null;
+#if NET4_0
+                transportStream.Close();
+#else
+                transportStream.Dispose();
+#endif
+                transportStream = null;
 			}
 
 			if (tcpClient != null)
 			{
-				tcpClient.Close();
-				tcpClient = null;
+#if NET4_0
+                tcpClient.Close();
+#else
+                tcpClient.Dispose();
+#endif
+                tcpClient = null;
 			}
 		}
 	}

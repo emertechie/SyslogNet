@@ -1,10 +1,14 @@
 ﻿using System;
+#if NET4_0
 using System.Runtime.Serialization;
+#endif
 
 namespace SyslogNet.Client
 {
-	[Serializable]
-	public class CommunicationsException : Exception
+#if NET4_0
+    [Serializable]
+#endif
+    public class CommunicationsException : Exception
 	{
 		public CommunicationsException()
 		{
@@ -18,10 +22,12 @@ namespace SyslogNet.Client
 		{
 		}
 
-		protected CommunicationsException(
+#if NET4_0
+        protected CommunicationsException(
 			SerializationInfo info,
 			StreamingContext context) : base(info, context)
 		{
 		}
-	}
+#endif
+    }
 }

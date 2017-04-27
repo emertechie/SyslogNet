@@ -9,17 +9,29 @@ namespace SyslogNet.Client.Transport
 	public class SyslogUdpSender : ISyslogMessageSender, IDisposable
 	{
 		private readonly UdpClient udpClient;
+        private readonly string _hostname;
+        private readonly int _port;
 
-		public SyslogUdpSender(string hostname, int port)
+        public SyslogUdpSender(string hostname, int port)
 		{
-			udpClient = new UdpClient(hostname, port);
-		}
+#if NET4_0
+            udpClient = new UdpClient(hostname, port);
+#else
+            udpClient = new UdpClient();
+#endif
+            _hostname = hostname;
+            _port = port;
+        }
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
 			byte[] datagramBytes = serializer.Serialize(message);
-			udpClient.Send(datagramBytes, datagramBytes.Length);
-		}
+#if NET4_0
+            udpClient.Send(datagramBytes, datagramBytes.Length);
+#else
+            udpClient.SendAsync(datagramBytes, datagramBytes.Length, _hostname, _port).Wait();
+#endif
+        }
 
 		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
 		{
@@ -33,7 +45,12 @@ namespace SyslogNet.Client.Transport
 
 		public void Dispose()
 		{
-			udpClient.Close();
-		}
+#if NET4_0
+            udpClient.Close();
+#else
+            udpClient.Dispose();
+#endif
+
+        }
 	}
 }
