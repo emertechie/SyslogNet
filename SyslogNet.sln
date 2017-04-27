@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SyslogNet.Client.netstandar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SyslogNet.Client.Tests.netcore", "SyslogNet.Client.Tests\SyslogNet.Client.Tests.netcore.csproj", "{7378396A-2DD1-4F54-BFBA-5971B9EFA4A1}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TesterApp.netcore", "TesterApp\TesterApp.netcore.csproj", "{1CFC222A-873D-4021-B4B9-4043A5A28528}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,18 @@ Global
 		{7378396A-2DD1-4F54-BFBA-5971B9EFA4A1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{7378396A-2DD1-4F54-BFBA-5971B9EFA4A1}.Release|x86.ActiveCfg = Release|Any CPU
 		{7378396A-2DD1-4F54-BFBA-5971B9EFA4A1}.Release|x86.Build.0 = Release|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Debug|x86.Build.0 = Debug|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Release|x86.ActiveCfg = Release|Any CPU
+		{1CFC222A-873D-4021-B4B9-4043A5A28528}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

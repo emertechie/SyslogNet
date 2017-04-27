@@ -45,3 +45,4 @@ packages
 
 *.nupkg
 *.nuspec
+.vs

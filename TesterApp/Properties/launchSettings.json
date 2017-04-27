@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TesterApp.netcore": {
+      "commandName": "Project",
+      "commandLineArgs": "-a Tester -s 127.0.0.1 -r 514 -o udp -v 3164"
+    }
+  }
+}
