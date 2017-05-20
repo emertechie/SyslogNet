@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
+using System.Linq;
 
 namespace SyslogNet.Client.Serialization
 {
@@ -33,25 +33,11 @@ namespace SyslogNet.Client.Serialization
 
 			writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
 
-			AddStructuredData(message, stream, messageBuilder);
-
-			if (!String.IsNullOrWhiteSpace(message.Message))
-			{
-				// Space
-				stream.WriteByte(32);
-
-				stream.Write(Encoding.UTF8.GetPreamble(), 0, Encoding.UTF8.GetPreamble().Length);
-				writeStream(stream, Encoding.UTF8, message.Message);
-			}
-		}
-
-		private void AddStructuredData(SyslogMessage message, Stream stream, StringBuilder messageBuilder)
-		{
-			// Structured data
 			var structuredData = message.StructuredDataElements.ToList();
 			if (structuredData.Any())
 			{
-				foreach (StructuredDataElement sdElement in structuredData)
+				// Structured data
+				foreach(StructuredDataElement sdElement in structuredData)
 				{
 					messageBuilder.Clear()
 						.Append(" ")
@@ -69,7 +55,7 @@ namespace SyslogNet.Client.Serialization
 							.Append("\"")
 							.Append(
 								sdParam.Value != null ?
-								sdParam.Value
+									sdParam.Value
 										.Replace("\\", "\\\\")
 										.Replace("\"", "\\\"")
 										.Replace("]", "\\]")
@@ -87,9 +73,17 @@ namespace SyslogNet.Client.Serialization
 			}
 			else
 			{
-				// " -"
 				writeStream(stream, Encoding.ASCII, " ");
 				writeStream(stream, Encoding.ASCII, NilValue);
+			}
+
+			if (!String.IsNullOrWhiteSpace(message.Message))
+			{
+				// Space
+				stream.WriteByte(32);
+
+				stream.Write(Encoding.UTF8.GetPreamble(), 0, Encoding.UTF8.GetPreamble().Length);
+				writeStream(stream, Encoding.UTF8, message.Message);
 			}
 		}
 
