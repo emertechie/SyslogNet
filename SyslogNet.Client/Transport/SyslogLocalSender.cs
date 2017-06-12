@@ -5,16 +5,24 @@ using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogLocalSender : ISyslogMessageSender, IDisposable
+    public class SyslogLocalSender : ISyslogMessageSender, IDisposable
 	{
 		// Will not work on Windows, as this relies on Unix system calls
 		public SyslogLocalSender()
 		{
-			PlatformID platform = Environment.OSVersion.Platform;
-			if (!(platform == PlatformID.MacOSX || platform == PlatformID.Unix)) {
+#if NET4_0
+            PlatformID platform = Environment.OSVersion.Platform;
+			if (!(platform == PlatformID.MacOSX || platform == PlatformID.Unix)) 
+            {
 				throw new CommunicationsException("SyslogLocalSender is only available on Unix-like systems (e.g., Linux, BSD, OS X)");
 			}
-		}
+#else
+            if(!(RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux)))
+            {
+                throw new CommunicationsException("SyslogLocalSender is only available on Unix-like systems (e.g., Linux, BSD, OS X)");
+            }
+#endif
+        }
 
 		[DllImport("libc", ExactSpelling=true)]
 		// Because openlog() makes a copy of the char *ident that it gets passed, we have to

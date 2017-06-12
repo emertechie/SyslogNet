@@ -10,36 +10,36 @@ namespace TesterApp
 {
 	internal class Options
 	{
-		[Option("h", "hostName", Required = false, HelpText = "The host name. If not set, defaults to the NetBIOS name of the local machine")]
-		public string LocalHostName { get; set; }
+        [Option('h', "hostName", Required = false, HelpText = "The host name. If not set, defaults to the NetBIOS name of the local machine")]
+        public string LocalHostName { get; set; }
 
-		[Option("a", "appName", Required = false, HelpText = "The application name")]
-		public string AppName { get; set; }
+        [Option('a', "appName", Required = true, HelpText = "The application name")]
+        public string AppName { get; set; }
 
-		[Option("p", "procId", Required = false, HelpText = "The process identifier")]
-		public string ProcId { get; set; }
+        [Option('p', "procId", Required = false, HelpText = "The process identifier")]
+        public string ProcId { get; set; }
 
-		[Option("t", "msgType", Required = false, HelpText = "The message type (called msgId in spec)")]
-		public string MsgType { get; set; }
+        [Option('t', "msgType", Required = false, HelpText = "The message type (called msgId in spec)")]
+        public string MsgType { get; set; }
 
-		[Option("m", "msg", Required = false, HelpText = "The message")]
-		public string Message { get; set; }
+        [Option('m', "msg", Required = false, HelpText = "The message")]
+        public string Message { get; set; }
 
-		[Option("s", "syslogServer", Required = true, HelpText = "Host name of the syslog server")]
-		public string SyslogServerHostname { get; set; }
+        [Option('s', "syslogServer", Required = true, HelpText = "Host name of the syslog server")]
+        public string SyslogServerHostname { get; set; }
 
-		[Option("r", "syslogPort", Required = true, HelpText = "The syslog server port")]
-		public int SyslogServerPort { get; set; }
+        [Option('r', "syslogPort", Required = true, HelpText = "The syslog server port")]
+        public int SyslogServerPort { get; set; }
 
-		[Option("v", "version", Required = false, DefaultValue = "5424", HelpText = "The version of syslog protocol to use. Possible values are '3164' and '5424' (from corresponding RFC documents) or 'local' to send messages to a local syslog (only on Linux or OS X). Default is '5424'")]
-		public string SyslogVersion { get; set; }
+        [Option('v', "version", Required = false, Default = "5424", HelpText = "The version of syslog protocol to use. Possible values are '3164' and '5424' (from corresponding RFC documents) or 'local' to send messages to a local syslog (only on Linux or OS X). Default is '5424'")]
+        public string SyslogVersion { get; set; }
 
-		[Option("o", "protocol", Required = false, DefaultValue = "tcp", HelpText = "The network protocol to use. Possible values are 'tcp' or 'udp' to send to a remote syslog server, or 'local' to send to a local syslog over Unix sockets (only on Linux or OS X). Default is 'tcp'. Note: TCP always uses SSL connection.")]
-		public string NetworkProtocol { get; set; }
+        [Option('o', "protocol", Required = false, Default = "tcp", HelpText = "The network protocol to use. Possible values are 'tcp' or 'udp' to send to a remote syslog server, or 'local' to send to a local syslog over Unix sockets (only on Linux or OS X). Default is 'tcp'. Note: TCP always uses SSL connection.")]
+        public string NetworkProtocol { get; set; }
 
-		[Option("c", "cert", Required = false, HelpText = "Optional path to a CA certificate used to verify Syslog server certificate when using TCP protocol")]
-		public string CACertPath { get; set; }
-	}
+        [Option('c', "cert", Required = false, HelpText = "Optional path to a CA certificate used to verify Syslog server certificate when using TCP protocol")]
+        public string CACertPath { get; set; }
+    }
 
 	public static class Program
 	{
@@ -47,21 +47,27 @@ namespace TesterApp
 		{
 			try
 			{
-				var options = new Options();
-				if (new CommandLineParser().ParseArguments(args, options))
+                Options options = null;
+                CommandLine.Parser.Default.ParseArguments<Options>(args).WithParsed(opt => options = opt);
+
+                if (options != null)
 				{
 					// string exceptionMessage = CreateExceptionMessageLevel1();
 
 					ISyslogMessageSerializer serializer = options.SyslogVersion == "5424"
-						? (ISyslogMessageSerializer)new SyslogRfc5424MessageSerializer()
-						: options.SyslogVersion == "3164"
-							? (ISyslogMessageSerializer)new SyslogRfc3164MessageSerializer()
-							: (ISyslogMessageSerializer)new SyslogLocalMessageSerializer();
+						? new SyslogRfc5424MessageSerializer() 
+                        : options.SyslogVersion == "3164" 
+                                ? new SyslogRfc3164MessageSerializer() 
+                                : (ISyslogMessageSerializer)new SyslogLocalMessageSerializer();
 
 					ISyslogMessageSender sender = options.NetworkProtocol == "tcp"
-						? (ISyslogMessageSender)new SyslogEncryptedTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
-						: options.NetworkProtocol == "udp"
-							? (ISyslogMessageSender)new SyslogUdpSender(options.SyslogServerHostname, options.SyslogServerPort)
+#if NET4_0
+                        ? new SyslogEncryptedTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
+#else
+                        ? new SyslogTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
+#endif
+                        : options.NetworkProtocol == "udp"
+							? new SyslogUdpSender(options.SyslogServerHostname, options.SyslogServerPort)
 							: (ISyslogMessageSender)new SyslogLocalSender();
 
 					SyslogMessage msg1 = CreateSyslogMessage(options);

@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('.netstandard'))">
+    <BaseIntermediateOutputPath>obj_netstandard\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('.netcore'))">
+    <BaseIntermediateOutputPath>obj_netcore\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

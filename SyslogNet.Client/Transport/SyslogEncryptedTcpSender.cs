@@ -6,7 +6,8 @@ using System.Threading;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogEncryptedTcpSender : SyslogTcpSender
+#if NET4_0
+    public class SyslogEncryptedTcpSender : SyslogTcpSender
 	{
 		protected int IOTimeout;
 		public Boolean IgnoreTLSChainErrors { get; private set; }
@@ -73,4 +74,5 @@ namespace SyslogNet.Client.Transport
 		// Quick and nasty way to avoid logging framework dependency
 		public static Action<string> CertificateErrorHandler = err => { };
 	}
+#endif
 }
