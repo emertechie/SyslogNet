@@ -23,7 +23,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(facility, severity);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<{0}>1 - - - - -", expectedPriorityValue), serializedMsg);
+			Assert.Equal(String.Format("<{0}>1 - - - - - -", expectedPriorityValue), serializedMsg);
 		}
 
 		[Fact]
@@ -35,7 +35,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, utcDateTime);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 {0} - - - -", expectedTimestamp), serializedMsg);
+			Assert.Equal(String.Format("<11>1 {0} - - - - -", expectedTimestamp), serializedMsg);
 		}
 
 		[Fact]
@@ -48,7 +48,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, knownDateTimeOffset);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 {0} - - - -", expectedTimestamp), serializedMsg);
+			Assert.Equal(String.Format("<11>1 {0} - - - - -", expectedTimestamp), serializedMsg);
 		}
 
 		[Theory]
@@ -59,7 +59,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, hostName: hostName);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 - {0} - - -", expectedHostName), serializedMsg);
+			Assert.Equal(String.Format("<11>1 - {0} - - - -", expectedHostName), serializedMsg);
 		}
 
 		[Theory]
@@ -70,7 +70,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, appName: appName);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 - - {0} - -", expectedAppName), serializedMsg);
+			Assert.Equal(String.Format("<11>1 - - {0} - - -", expectedAppName), serializedMsg);
 		}
 
 		[Theory]
@@ -81,7 +81,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, procId: procId);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 - - - {0} -", expectedProcId), serializedMsg);
+			Assert.Equal(String.Format("<11>1 - - - {0} - -", expectedProcId), serializedMsg);
 		}
 
 		[Theory]
@@ -92,7 +92,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, msgId: msgId);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 - - - - {0}", expectedMsgId), serializedMsg);
+			Assert.Equal(String.Format("<11>1 - - - - {0} -", expectedMsgId), serializedMsg);
 		}
 
 		[Theory]
@@ -104,7 +104,7 @@ namespace SyslogNet.Client.Tests.Serialization
 
 			string serializedMsg = sut.Serialize(msg);
 
-			string messagePrefix = "<11>1 - - - - - ";
+			string messagePrefix = "<11>1 - - - - - - ";
 			Assert.True(serializedMsg.StartsWith(messagePrefix));
 
 			int messageIndex = 0;

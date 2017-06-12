@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 namespace SyslogNet.Client.Serialization
 {
@@ -32,39 +33,48 @@ namespace SyslogNet.Client.Serialization
 
 			writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
 
-			// Structured data
-			foreach(StructuredDataElement sdElement in message.StructuredDataElements)
+			var structuredData = message.StructuredDataElements.ToList();
+			if (structuredData.Any())
 			{
-				messageBuilder.Clear()
-					.Append(" ")
-					.Append("[")
-					.Append(sdElement.SdId.FormatSyslogSdnameField(asciiCharsBuffer));
-
-				writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
-
-				foreach(System.Collections.Generic.KeyValuePair<string, string> sdParam in sdElement.Parameters)
+				// Structured data
+				foreach(StructuredDataElement sdElement in structuredData)
 				{
 					messageBuilder.Clear()
 						.Append(" ")
-						.Append(sdParam.Key.FormatSyslogSdnameField(asciiCharsBuffer))
-						.Append("=")
-						.Append("\"")
-						.Append(
-							sdParam.Value != null ?
-								sdParam.Value
-									.Replace("\\", "\\\\")
-									.Replace("\"", "\\\"")
-									.Replace("]", "\\]")
-								:
-								String.Empty
-						)
-						.Append("\"");
+						.Append("[")
+						.Append(sdElement.SdId.FormatSyslogSdnameField(asciiCharsBuffer));
 
-					writeStream(stream, Encoding.UTF8, messageBuilder.ToString());
+					writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
+
+					foreach(System.Collections.Generic.KeyValuePair<string, string> sdParam in sdElement.Parameters)
+					{
+						messageBuilder.Clear()
+							.Append(" ")
+							.Append(sdParam.Key.FormatSyslogSdnameField(asciiCharsBuffer))
+							.Append("=")
+							.Append("\"")
+							.Append(
+								sdParam.Value != null ?
+									sdParam.Value
+										.Replace("\\", "\\\\")
+										.Replace("\"", "\\\"")
+										.Replace("]", "\\]")
+									:
+									String.Empty
+							)
+							.Append("\"");
+
+						writeStream(stream, Encoding.UTF8, messageBuilder.ToString());
+					}
+
+					// ]
+					stream.WriteByte(93);
 				}
-
-				// ]
-				stream.WriteByte(93);
+			}
+			else
+			{
+				writeStream(stream, Encoding.ASCII, " ");
+				writeStream(stream, Encoding.ASCII, NilValue);
 			}
 
 			if (!String.IsNullOrWhiteSpace(message.Message))
