@@ -36,11 +36,13 @@ namespace SyslogNet.Client.Serialization
 			var structuredData = message.StructuredDataElements.ToList();
 			if (structuredData.Any())
 			{
-				// Structured data
-				foreach(StructuredDataElement sdElement in structuredData)
+			    // Space
+			    stream.WriteByte(32);
+
+                // Structured data
+                foreach (StructuredDataElement sdElement in structuredData)
 				{
 					messageBuilder.Clear()
-						.Append(" ")
 						.Append("[")
 						.Append(sdElement.SdId.FormatSyslogSdnameField(asciiCharsBuffer));
 

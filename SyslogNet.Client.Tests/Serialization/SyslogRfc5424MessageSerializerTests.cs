@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using SyslogNet.Client.Serialization;
 using Xunit;
@@ -93,35 +94,78 @@ namespace SyslogNet.Client.Tests.Serialization
 
 			string serializedMsg = sut.Serialize(msg);
 			Assert.Equal(String.Format("<11>1 - - - - {0} -", expectedMsgId), serializedMsg);
-		}
+	    }
 
-		[Theory]
-		[InlineData("The message", "The message")]
-		[InlineData("メッセージ", "メッセージ")]
-		public void CanFormatSyslogMessageWithUtf8Message(string message, string expectedMessage)
-		{
-			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, message: message);
+	    [Theory]
+	    [InlineData("The message", "The message")]
+	    [InlineData("メッセージ", "メッセージ")]
+	    public void CanFormatSyslogMessageWithUtf8Message(string message, string expectedMessage)
+	    {
+	        var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, message: message);
 
-			string serializedMsg = sut.Serialize(msg);
+	        string serializedMsg = sut.Serialize(msg);
 
-			string messagePrefix = "<11>1 - - - - - - ";
-			Assert.True(serializedMsg.StartsWith(messagePrefix));
+	        string messagePrefix = "<11>1 - - - - - - ";
+	        Assert.True(serializedMsg.StartsWith(messagePrefix));
 
-			int messageIndex = 0;
-			var bom = new[] { (byte)239 /*EF*/, (byte)187 /*BB*/, (byte)191 /*BF*/ };
+	        int messageIndex = 0;
+	        var bom = new[] { (byte)239 /*EF*/, (byte)187 /*BB*/, (byte)191 /*BF*/ };
 
-			char[] bomChars = Encoding.UTF8.GetChars(bom);
-			foreach (char bomChar in bomChars)
-			{
-				char c = serializedMsg[messagePrefix.Length + messageIndex++];
-				Assert.Equal(bomChar, c);
-			}
+	        char[] bomChars = Encoding.UTF8.GetChars(bom);
+	        foreach (char bomChar in bomChars)
+	        {
+	            char c = serializedMsg[messagePrefix.Length + messageIndex++];
+	            Assert.Equal(bomChar, c);
+	        }
 
-			string utf8MessagePart = serializedMsg.Substring(messagePrefix.Length + bomChars.Length);
-			Assert.Equal(expectedMessage, utf8MessagePart);
-		}
+	        string utf8MessagePart = serializedMsg.Substring(messagePrefix.Length + bomChars.Length);
+	        Assert.Equal(expectedMessage, utf8MessagePart);
+	    }
 
-		private static SyslogMessage CreateMinimalSyslogMessage(
+	    [Fact]
+	    public void CanFormatSyslogMessageWithSingleStructuredDataElement()
+	    {
+	        var sdi = "test@12345";
+	        var key = "key";
+	        var value = "value";
+
+            var structuredDataElements = new List<StructuredDataElement>
+	        {
+	            new StructuredDataElement(sdi, new Dictionary<string, string> {{key, value}})
+	        };
+	        var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, structuredDataElements:structuredDataElements.ToArray());
+
+	        string serializedMsg = sut.Serialize(msg);
+
+	        string messagePrefix = $"<11>1 - - - - - [{sdi} {key}=\"{value}\"]";
+	        Assert.True(serializedMsg.StartsWith(messagePrefix));
+	    }
+
+	    [Fact]
+	    public void CanFormatSyslogMessageWithMultipleStructuredDataElement()
+	    {
+	        var sdi1 = "testA@12345";
+	        var key1 = "key";
+	        var value1 = "value";
+
+	        var sdi2 = "testB@23456";
+	        var key2 = "key";
+	        var value2 = "value";
+
+            var structuredDataElements = new List<StructuredDataElement>
+	        {
+	            new StructuredDataElement(sdi1, new Dictionary<string, string> {{key1, value1}}),
+	            new StructuredDataElement(sdi2, new Dictionary<string, string> {{key2, value2}}),
+            };
+	        var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, structuredDataElements: structuredDataElements.ToArray());
+
+	        string serializedMsg = sut.Serialize(msg);
+
+	        string messagePrefix = $"<11>1 - - - - - [{sdi1} {key1}=\"{value1}\"][{sdi2} {key2}=\"{value2}\"]";
+	        Assert.True(serializedMsg.StartsWith(messagePrefix));
+	    }
+
+        private static SyslogMessage CreateMinimalSyslogMessage(
 			Facility facility,
 			Severity severity,
 			DateTimeOffset? dateTimeOffset = null,
