@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Linq;
 
 namespace SyslogNet.Client.Serialization
 {
@@ -33,8 +32,8 @@ namespace SyslogNet.Client.Serialization
 
 			writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
 
-			var structuredData = message.StructuredDataElements?.ToList();
-			if (structuredData != null && structuredData.Any())
+			var structuredData = message.StructuredDataElements;
+			if (structuredData != null && structuredData.Length != 0)
 			{
 			    // Space
 			    stream.WriteByte(32);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace SyslogNet.Client
 {
@@ -12,7 +11,7 @@ namespace SyslogNet.Client
 		private readonly string procId;
 		private readonly string msgId;
 		private readonly string message;
-		private readonly IEnumerable<StructuredDataElement> structuredDataElements;
+		private readonly StructuredDataElement[] structuredDataElements;
 		private readonly DateTimeOffset? dateTimeOffset;
 		
 		public static Facility DefaultFacility = Facility.UserLevelMessages;
@@ -128,7 +127,7 @@ namespace SyslogNet.Client
 			get { return message; }
 		}
 
-		public IEnumerable<StructuredDataElement> StructuredDataElements
+		public StructuredDataElement[] StructuredDataElements
 		{
 			get { return structuredDataElements; }
 		}
