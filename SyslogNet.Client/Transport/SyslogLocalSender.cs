@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
@@ -115,6 +116,16 @@ namespace SyslogNet.Client.Transport
 		public void Send(IEnumerable<SyslogMessage> messages)
 		{
 			Send(messages, defaultSerializer);
+		}
+
+		public Task SendAsync(SyslogMessage message, ISyslogMessageSerializer serializer)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task SendAsync(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
+		{
+			throw new NotImplementedException();
 		}
 
 		public void Dispose()

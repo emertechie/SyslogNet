@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
@@ -72,10 +73,20 @@ namespace SyslogNet.Client.Transport
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
-			Send(message, serializer, true);
+			SendAsync(message, serializer).Wait();
 		}
 
-		protected void Send(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush = true)
+		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
+		{
+			SendAsync(messages, serializer).Wait();
+		}
+
+		public async Task SendAsync(SyslogMessage message, ISyslogMessageSerializer serializer)
+		{
+			await SendAsync(message, serializer, true);
+		}
+		
+		public async Task SendAsync(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush)
 		{
 			if(transportStream == null)
 			{
@@ -89,29 +100,29 @@ namespace SyslogNet.Client.Transport
 				if (messageTransfer.Equals(MessageTransfer.OctetCounting))
 				{
 					byte[] messageLength = Encoding.ASCII.GetBytes(datagramBytes.Length.ToString());
-					memoryStream.Write(messageLength, 0, messageLength.Length);
-					memoryStream.WriteByte(32); // Space
+					await memoryStream.WriteAsync(messageLength, 0, messageLength.Length);
+					await memoryStream.WriteByteAsync(32); // Space
 				}
 
-				memoryStream.Write(datagramBytes, 0, datagramBytes.Length);
+				await memoryStream.WriteAsync(datagramBytes, 0, datagramBytes.Length);
 
 				if (messageTransfer.Equals(MessageTransfer.NonTransparentFraming))
 				{
-					memoryStream.WriteByte(trailer); // LF
+					await memoryStream.WriteByteAsync(trailer); // LF
 				}
 
-				transportStream.Write(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
+				await transportStream.WriteAsync(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
 			}
 
 			if (flush && !(transportStream is NetworkStream))
-				transportStream.Flush();
+				await transportStream.FlushAsync();
 		}
 
-		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
+		public async Task SendAsync(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
 		{
 			foreach (SyslogMessage message in messages)
 			{
-				Send(message, serializer, false);
+				await SendAsync(message, serializer, false);
 			}
 
 			if (!(transportStream is NetworkStream))
@@ -121,6 +132,16 @@ namespace SyslogNet.Client.Transport
 		public void Dispose()
 		{
 			Disconnect();
+		}
+	}
+
+	static class MemoryStreamExtensions
+	{
+		private static readonly byte[] WriteByteAsyncBuffer = new byte[1];
+		public static Task WriteByteAsync(this MemoryStream stream, byte value)
+		{
+			WriteByteAsyncBuffer[0] = value;
+			return stream.WriteAsync(WriteByteAsyncBuffer, 0, 1);
 		}
 	}
 }
