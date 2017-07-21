@@ -73,12 +73,50 @@ namespace SyslogNet.Client.Transport
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
-			SendAsync(message, serializer).Wait();
+			Send(message, serializer, true);
+		}
+
+		protected void Send(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush = true)
+		{
+			if(transportStream == null)
+			{
+				throw new IOException("No transport stream exists");
+			}
+
+			using (MemoryStream memoryStream = new MemoryStream())
+			{
+				var datagramBytes = serializer.Serialize(message);
+
+				if (messageTransfer.Equals(MessageTransfer.OctetCounting))
+				{
+					byte[] messageLength = Encoding.ASCII.GetBytes(datagramBytes.Length.ToString());
+					memoryStream.Write(messageLength, 0, messageLength.Length);
+					memoryStream.WriteByte(32); // Space
+				}
+
+				memoryStream.Write(datagramBytes, 0, datagramBytes.Length);
+
+				if (messageTransfer.Equals(MessageTransfer.NonTransparentFraming))
+				{
+					memoryStream.WriteByte(trailer); // LF
+				}
+
+				transportStream.Write(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
+			}
+
+			if (flush && !(transportStream is NetworkStream))
+				transportStream.Flush();
 		}
 
 		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
 		{
-			SendAsync(messages, serializer).Wait();
+			foreach (SyslogMessage message in messages)
+			{
+				Send(message, serializer, false);
+			}
+
+			if (!(transportStream is NetworkStream))
+				transportStream.Flush();
 		}
 
 		public async Task SendAsync(SyslogMessage message, ISyslogMessageSerializer serializer)
@@ -128,7 +166,7 @@ namespace SyslogNet.Client.Transport
 			if (!(transportStream is NetworkStream))
 				transportStream.Flush();
 		}
-
+		
 		public void Dispose()
 		{
 			Disconnect();

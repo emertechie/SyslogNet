@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using SyslogNet.Client.Serialization;
@@ -16,7 +15,8 @@ namespace SyslogNet.Client.Transport
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
-			SendAsync(message, serializer).Wait();
+			byte[] datagramBytes = serializer.Serialize(message);
+			udpClient.Send(datagramBytes, datagramBytes.Length);
 		}
 
 		public async Task SendAsync(SyslogMessage message, ISyslogMessageSerializer serializer)
