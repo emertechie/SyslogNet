@@ -24,18 +24,19 @@ namespace SyslogNet.Client.Transport
 		public virtual MessageTransfer messageTransfer { get; set; }
 		public byte trailer { get; set; }
 
-		public SyslogTcpSender(string hostname, int port)
+		public SyslogTcpSender(string hostname, int port, bool connect = true)
 		{
 			this.hostname = hostname;
 			this.port = port;
 
-			Connect();
+			if (connect)
+				Connect();
 
 			messageTransfer = MessageTransfer.OctetCounting;
 			trailer = 10; // LF
 		}
 
-		protected void Connect()
+		public void Connect()
 		{
 			try
 			{
@@ -44,15 +45,30 @@ namespace SyslogNet.Client.Transport
 			}
 			catch
 			{
-				Dispose();
+				Disconnect();
 				throw;
 			}
 		}
 
 		public virtual void Reconnect()
 		{
-			Dispose();
+			Disconnect();
 			Connect();
+		}
+
+		public void Disconnect()
+		{
+			if (transportStream != null)
+			{
+				transportStream.Close();
+				transportStream = null;
+			}
+
+			if (tcpClient != null)
+			{
+				tcpClient.Close();
+				tcpClient = null;
+			}
 		}
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
@@ -105,17 +121,7 @@ namespace SyslogNet.Client.Transport
 
 		public void Dispose()
 		{
-			if (transportStream != null)
-			{
-				transportStream.Close();
-				transportStream = null;
-			}
-
-			if (tcpClient != null)
-			{
-				tcpClient.Close();
-				tcpClient = null;
-			}
+			Disconnect();
 		}
 	}
 }
