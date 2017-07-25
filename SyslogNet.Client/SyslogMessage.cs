@@ -5,7 +5,7 @@ namespace SyslogNet.Client
 {
 	public class SyslogMessage
 	{
-		public const int Version = 1;
+		public readonly int Version = 1;
 
 		public Facility Facility { get; set; }
 
