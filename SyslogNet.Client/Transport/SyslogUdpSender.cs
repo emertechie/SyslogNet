@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Text;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogUdpSender : ISyslogMessageSender, IDisposable
+	public class SyslogUdpSender : ISyslogMessageSender
 	{
 		private readonly UdpClient udpClient;
 
@@ -23,7 +22,7 @@ namespace SyslogNet.Client.Transport
 
 		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
 		{
-			foreach(SyslogMessage message in messages)
+			foreach (SyslogMessage message in messages)
 			{
 				Send(message, serializer);
 			}

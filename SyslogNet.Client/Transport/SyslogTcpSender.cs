@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
@@ -13,7 +12,7 @@ namespace SyslogNet.Client.Transport
 		NonTransparentFraming	= 1
 	}
 
-	public class SyslogTcpSender : ISyslogMessageSender, IDisposable
+	public class SyslogTcpSender : ISyslogMessageSender
 	{
 		protected String hostname;
 		protected int port;
