@@ -5,13 +5,11 @@ namespace SyslogNet.Client
 {
 	public class SyslogMessage
 	{
-		public readonly int Version = 1;
-
 		public Facility Facility { get; set; }
 
 		public Severity Severity { get; set; }
 
-		public DateTimeOffset? DateTimeOffset { get; set; }
+		public DateTimeOffset? Timestamp { get; set; }
 
 		public string HostName { get; set; }
 

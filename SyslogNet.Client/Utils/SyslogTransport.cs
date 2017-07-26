@@ -4,5 +4,6 @@
     {
         Udp,
         Tcp,
+        TlsTcp,
     }
 }

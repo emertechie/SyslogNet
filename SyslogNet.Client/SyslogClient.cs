@@ -1,21 +1,20 @@
-﻿
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using SyslogNet.Client.Extensions;
 using SyslogNet.Client.Serialization;
+using SyslogNet.Client.Transport;
 
-namespace SyslogNet.Client.Transport
+namespace SyslogNet.Client
 {
     public class SyslogClient : IDisposable
     {
         public SyslogTransport Transport { get; set; }
-        public bool EnableTls { get; set; }
         public SyslogFormat Format { get; set; }
         public SyslogFraming Framing { get; set; }
-        public bool AutoConnect { get; set; }
-        public bool AutoFlush { get; set; }
         public TimeSpan SendTimeout { get; set; }
         public TimeSpan RecvTimeout { get; set; }
 
@@ -36,16 +35,10 @@ namespace SyslogNet.Client.Transport
             
             // Defaults to a totally functional Syslog Client
             Transport = SyslogTransport.Tcp;
-            EnableTls = false;
             Format = SyslogFormat.RFC5424;
             Framing = SyslogFraming.OctetCounting;
-            AutoConnect = true;
-            AutoFlush = true;
             SendTimeout = TimeSpan.FromSeconds(5);
             RecvTimeout = TimeSpan.FromSeconds(5);
-
-            _tcpClient.SendTimeout = (int)SendTimeout.TotalMilliseconds;
-            _tcpClient.ReceiveTimeout = (int)RecvTimeout.TotalMilliseconds;
         }
 
         public void Dispose()
@@ -67,8 +60,12 @@ namespace SyslogNet.Client.Transport
                 {
                     _port = Transport == SyslogTransport.Tcp ? 6514 : 514;
                 }
-                
-                _tcpClient = new TcpClient();
+
+                _tcpClient = new TcpClient
+                {
+                    SendTimeout = (int) SendTimeout.TotalMilliseconds,
+                    ReceiveTimeout = (int) RecvTimeout.TotalMilliseconds
+                };
                 await _tcpClient.ConnectAsync(_hostname, _port);
                 _tcpStream = _tcpClient.GetStream();
             }
@@ -94,47 +91,53 @@ namespace SyslogNet.Client.Transport
             _tcpClient = null;
             _tcpStream = null;
         }
-        
-        public async Task SendAsync(SyslogMessage message)
+
+        public Task SendAsync(string message, CancellationToken token = default(CancellationToken))
+        {
+            return SendAsync(new SyslogMessage
+                {
+                    Message = message
+                },
+                token);
+        }
+
+        public async Task SendAsync(SyslogMessage message, CancellationToken token = default(CancellationToken))
         {
             ThowIfDisposed();
 
             try
             {
-                await EnsureConnected();
+                ThowIfNotConnected();
 
                 using (var serializedMessage = new MemoryStream())
                 {
                     if (Format == SyslogFormat.RFC5424)
                     {
-                        await SyslogRfc5424MessageSerializer.SerializeAsync(message, serializedMessage);
+                        await SyslogRfc5424MessageSerializer.SerializeAsync(message, serializedMessage, token);
                     }
                     else
                     {
-                        await SyslogRfc3164MessageSerializer.SerializeAsync(message, serializedMessage);
+                        await SyslogRfc3164MessageSerializer.SerializeAsync(message, serializedMessage, token);
                     }
 
                     // Prepended length
                     if (Framing == SyslogFraming.OctetCounting)
                     {
                         var messageLength = Encoding.ASCII.GetBytes(serializedMessage.Length.ToString());
-                        await _tcpStream.WriteAsync(messageLength, 0, messageLength.Length);
-                        await _tcpStream.WriteByteAsync(0x20); // Space
+                        await _tcpStream.WriteAsync(messageLength, 0, messageLength.Length, token);
+                        await _tcpStream.WriteByteAsync(' ', token); // Space
                     }
 
-                    await _tcpStream.WriteAsync(serializedMessage.GetBuffer(), 0, (int) serializedMessage.Length);
+                    await _tcpStream.WriteAsync(serializedMessage.GetBuffer(), 0, (int) serializedMessage.Length, token);
 
                     // Appended Line-Feed
                     if (Framing == SyslogFraming.NonTransparentFraming)
                     {
-                        await _tcpStream.WriteByteAsync(0x0A); // LF
+                        await _tcpStream.WriteByteAsync('\n', token); // LF
                     }
                 }
 
-                if (AutoFlush)
-                {
-                    await _tcpStream.FlushAsync();
-                }
+                await _tcpStream.FlushAsync(token);
             }
             catch (Exception e)
             {
@@ -142,24 +145,9 @@ namespace SyslogNet.Client.Transport
             }
         }
 
-        private async Task EnsureConnected()
+        public bool IsConnected()
         {
-            if (AutoConnect)
-            {
-                if (_tcpClient == null)
-                {
-                    await ConnectAsync();
-                }
-                else if (!_tcpClient.Connected)
-                {
-                    Disconnect();
-                    await ConnectAsync();
-                }
-            }
-            else
-            {
-                ThowIfNotConnected();
-            }
+            return _tcpClient != null && _tcpClient.Connected;
         }
         
         private void ThowIfDisposed()
@@ -172,19 +160,15 @@ namespace SyslogNet.Client.Transport
 
         private void ThowIfNotConnected()
         {
-            if (_tcpClient == null)
+            if (!IsConnected())
             {
                 throw new SyslogException("Client is not connected to server.");
-            }
-            if (!_tcpClient.Connected)
-            {
-                throw new SyslogException("Client has been disconnected.");
             }
         }
         
         private void ThowIfConnected()
         {
-            if (_tcpClient != null && _tcpClient.Connected)
+            if (IsConnected())
             {
                 throw new SyslogException("Client is already connected.");
             }
