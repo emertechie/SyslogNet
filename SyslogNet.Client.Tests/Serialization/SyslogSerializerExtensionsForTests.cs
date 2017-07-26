@@ -1,16 +1,17 @@
 ﻿using System.IO;
 using System.Text;
+using System.Threading;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Tests.Serialization
 {
 	internal static class SyslogSerializerExtensionsForTests
 	{
-		public static string Serialize(this SyslogRfc5424MessageSerializer serializer, SyslogMessage message)
+		public static string SerializeRfc5424(SyslogMessage message)
 		{
 			using (var stream = new MemoryStream())
 			{
-				serializer.Serialize(message, stream);
+				SyslogRfc5424MessageSerializer.SerializeAsync(message, stream, default(CancellationToken)).Wait();
 				stream.Flush();
 				stream.Position = 0;
 
@@ -19,24 +20,11 @@ namespace SyslogNet.Client.Tests.Serialization
 			}
 		}
 
-		public static string Serialize(this SyslogRfc3164MessageSerializer serializer, SyslogMessage message)
+		public static string SerializeRfc3164(SyslogMessage message)
 		{
 			using (var stream = new MemoryStream())
 			{
-				serializer.Serialize(message, stream);
-				stream.Flush();
-				stream.Position = 0;
-
-				using (var reader = new StreamReader(stream, Encoding.UTF8))
-					return reader.ReadLine();
-			}
-		}
-
-		public static string Serialize(this SyslogLocalMessageSerializer serializer, SyslogMessage message)
-		{
-			using (var stream = new MemoryStream())
-			{
-				serializer.Serialize(message, stream);
+				SyslogRfc3164MessageSerializer.SerializeAsync(message, stream, default(CancellationToken)).Wait();
 				stream.Flush();
 				stream.Position = 0;
 

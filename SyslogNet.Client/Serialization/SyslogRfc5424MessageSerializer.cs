@@ -3,143 +3,117 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using static SyslogNet.Client.Extensions.StreamExtensions;
 
 namespace SyslogNet.Client.Serialization
 {
-	public class SyslogRfc5424MessageSerializer : SyslogMessageSerializerBase, ISyslogMessageSerializer
+	public class SyslogRfc5424MessageSerializer
 	{
-		public const string NilValue = "-";
-		public static readonly HashSet<char> sdNameDisallowedChars = new HashSet<char>() {' ', '=', ']', '"' };
+		private const string NilValue = "-";
 
-		private readonly char[] asciiCharsBuffer = new char[255];
-
-		public void Serialize(SyslogMessage message, Stream stream)
+		public static async Task SerializeAsync(SyslogMessage message, Stream stream, CancellationToken token)
 		{
-			var priorityValue = CalculatePriorityValue(message.Facility, message.Severity);
+			var priorityValue = ((int) message.Facility << 3) + (int) message.Severity;
 
-			// Note: The .Net ISO 8601 "o" format string uses 7 decimal places for fractional second. Syslog spec only allows 6, hence the custom format string
-			var timestamp = message.DateTimeOffset.HasValue
-				? message.DateTimeOffset.Value.ToString("yyyy-MM-ddTHH:mm:ss.ffffffK")
-				: null;
+			// Note: The .Net ISO 8601 "o" format string uses 7 decimal places for fractional second.
+			// Syslog spec only allows 6, hence the custom format string
+			var timestamp = (message.Timestamp ?? DateTimeOffset.UtcNow).ToString("yyyy-MM-ddTHH:mm:ss.ffffffK");
 
-			var messageBuilder = new StringBuilder();
-			messageBuilder.Append("<").Append(priorityValue).Append(">");
-			messageBuilder.Append(message.Version);
-			messageBuilder.Append(" ").Append(timestamp.FormatSyslogField(NilValue));
-			messageBuilder.Append(" ").Append(message.HostName.FormatSyslogAsciiField(NilValue, 255, asciiCharsBuffer));
-			messageBuilder.Append(" ").Append(message.AppName.FormatSyslogAsciiField(NilValue, 48, asciiCharsBuffer));
-			messageBuilder.Append(" ").Append(message.ProcId.FormatSyslogAsciiField(NilValue, 128, asciiCharsBuffer));
-			messageBuilder.Append(" ").Append(message.MsgId.FormatSyslogAsciiField(NilValue, 32, asciiCharsBuffer));
+			var messageBuilder = new StringBuilder()
+				.Append("<")
+				.Append(priorityValue)
+				.Append(">1 ")
+				.Append(timestamp)
+				.Append(" ")
+				.Append(FieldOrNil(Sanitize(message.HostName, 255)))
+				.Append(" ")
+				.Append(FieldOrNil(Sanitize(message.AppName, 48)))
+				.Append(" ")
+				.Append(FieldOrNil(Sanitize(message.ProcId, 128)))
+				.Append(" ")
+				.Append(FieldOrNil(Sanitize(message.MsgId, 32)));
 
-			writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
+			await WriteStreamAsync(stream, messageBuilder.ToString(), token);
 
-			var structuredData = message.StructuredDataElements?.ToList();
-			if (structuredData != null && structuredData.Any())
+			await stream.WriteByteAsync(' ', token);
+			if (message.StructuredDataElements != null && message.StructuredDataElements.Any())
 			{
-			    // Space
-			    stream.WriteByte(32);
-
-                // Structured data
-                foreach (StructuredDataElement sdElement in structuredData)
-				{
-					messageBuilder.Clear()
-						.Append("[")
-						.Append(sdElement.SdId.FormatSyslogSdnameField(asciiCharsBuffer));
-
-					writeStream(stream, Encoding.ASCII, messageBuilder.ToString());
-
-					foreach(System.Collections.Generic.KeyValuePair<string, string> sdParam in sdElement.Parameters)
-					{
-						messageBuilder.Clear()
-							.Append(" ")
-							.Append(sdParam.Key.FormatSyslogSdnameField(asciiCharsBuffer))
-							.Append("=")
-							.Append("\"")
-							.Append(
-								sdParam.Value != null ?
-									sdParam.Value
-										.Replace("\\", "\\\\")
-										.Replace("\"", "\\\"")
-										.Replace("]", "\\]")
-									:
-									String.Empty
-							)
-							.Append("\"");
-
-						writeStream(stream, Encoding.UTF8, messageBuilder.ToString());
-					}
-
-					// ]
-					stream.WriteByte(93);
-				}
+                foreach (var sdElement in message.StructuredDataElements)
+                {
+	                await WriteStructuredDataElement(stream, sdElement, token);
+                }
 			}
 			else
 			{
-				writeStream(stream, Encoding.ASCII, " ");
-				writeStream(stream, Encoding.ASCII, NilValue);
+				await WriteStreamAsync(stream, NilValue, token);
 			}
 
-			if (!String.IsNullOrWhiteSpace(message.Message))
+			await stream.WriteByteAsync(' ', token);
+			await stream.WriteAsync(Encoding.UTF8.GetPreamble(), 0, Encoding.UTF8.GetPreamble().Length, token);
+			await WriteStreamAsync(stream, message.Message ?? NilValue, token);
+		}
+
+		private static readonly StringBuilder MessageBuilder = new StringBuilder();
+		private static async Task WriteStructuredDataElement(Stream stream, 
+													         StructuredDataElement sdElement,
+													         CancellationToken token)
+		{
+			MessageBuilder.Clear()
+				.Append("[")
+				.Append(Sanitize(sdElement.SdId, 32, true));
+
+			await WriteStreamAsync(stream, MessageBuilder.ToString(), token);
+
+			foreach (var sdParam in sdElement.Parameters)
 			{
-				// Space
-				stream.WriteByte(32);
+				MessageBuilder.Clear()
+					.Append(" ")
+					.Append(Sanitize(sdParam.Key, 32, true))
+					.Append("=")
+					.Append("\"")
+					.Append(
+						sdParam.Value?.Replace("\\", "\\\\")
+							.Replace("\"", "\\\"")
+							.Replace("]", "\\]") ?? string.Empty
+					)
+					.Append("\"");
 
-				stream.Write(Encoding.UTF8.GetPreamble(), 0, Encoding.UTF8.GetPreamble().Length);
-				writeStream(stream, Encoding.UTF8, message.Message);
+				await WriteStreamAsync(stream, MessageBuilder.ToString(), token);
 			}
+
+			await stream.WriteByteAsync(']', token);
 		}
 
-		private void writeStream(Stream stream, Encoding encoding, String data)
+		private static async Task WriteStreamAsync(Stream stream, string data, CancellationToken token)
 		{
-			byte[] streamBytes = encoding.GetBytes(data);
-			stream.Write(streamBytes, 0, streamBytes.Length);
-		}
-	}
-
-	internal static class StringExtensions
-	{
-		public static string IfNotNullOrWhitespace(this string s, Func<string, string> action)
-		{
-			return String.IsNullOrWhiteSpace(s) ? s : action(s);
+			var streamBytes = Encoding.UTF8.GetBytes(data);
+			await stream.WriteAsync(streamBytes, 0, streamBytes.Length, token);
 		}
 
-		public static string FormatSyslogField(this string s, string replacementValue, int? maxLength = null)
+		private static string FieldOrNil(string value)
 		{
-			return String.IsNullOrWhiteSpace(s)
-				? replacementValue
-				: maxLength.HasValue ? EnsureMaxLength(s, maxLength.Value) : s;
+			return string.IsNullOrWhiteSpace(value) ? NilValue : value;
 		}
 
-		public static string EnsureMaxLength(this string s, int maxLength)
+		private static readonly char[] Buffer = new char[255];
+		private static readonly HashSet<char> SdNameDisallowedChars = new HashSet<char> { ' ', '=', ']', '"' };
+		public static string Sanitize(string s, int maxLength, bool sanitizeAsSdName = false)
 		{
-			return String.IsNullOrWhiteSpace(s)
-				? s
-				: s.Length > maxLength ? s.Substring(0, maxLength) : s;
-		}
-
-		public static string FormatSyslogAsciiField(this string s, string replacementValue, int maxLength, char[] charBuffer, Boolean sdName = false)
-		{
-			s = FormatSyslogField(s, replacementValue, maxLength);
-
-			int bufferIndex = 0;
-			for (int i = 0; i < s.Length; i++)
+			if (s == null) return "";
+			
+			var bufferIndex = 0;
+			foreach (var c in s)
 			{
-				char c = s[i];
-				if (c >= 33 && c <= 126)
-				{
-					if (!sdName || !SyslogRfc5424MessageSerializer.sdNameDisallowedChars.Contains(c))
-					{
-						charBuffer[bufferIndex++] = c;
-					}
-				}
+				if (bufferIndex == maxLength) break;
+				if (c < 33 || c > 126) continue;
+				if (sanitizeAsSdName && SdNameDisallowedChars.Contains(c)) continue;
+				
+				Buffer[bufferIndex++] = c;
 			}
 
-			return new string(charBuffer, 0, bufferIndex);
-		}
-
-		public static string FormatSyslogSdnameField(this string s, char[] charBuffer)
-		{
-			return FormatSyslogAsciiField(s, SyslogRfc5424MessageSerializer.NilValue, 32, charBuffer, true);
+			return new string(Buffer, 0, Math.Min(bufferIndex, maxLength));
 		}
 	}
 }

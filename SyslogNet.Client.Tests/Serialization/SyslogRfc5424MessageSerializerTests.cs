@@ -4,16 +4,15 @@ using System.Text;
 using SyslogNet.Client.Serialization;
 using Xunit;
 using Xunit.Extensions;
+using static SyslogNet.Client.Tests.Serialization.SyslogSerializerExtensionsForTests;
 
 namespace SyslogNet.Client.Tests.Serialization
 {
 	public class SyslogRfc5424MessageSerializerTests
 	{
-		private readonly SyslogRfc5424MessageSerializer sut;
-
+		private const string TimestampRegex = @"\d{4}-\d{2}-\d{2}.\d{2}:\d{2}:\d{2}\.\d{6}\S+";
 		public SyslogRfc5424MessageSerializerTests()
 		{
-			sut = new SyslogRfc5424MessageSerializer();
 		}
 
 		[Theory]
@@ -23,8 +22,10 @@ namespace SyslogNet.Client.Tests.Serialization
 		{
 			var msg = CreateMinimalSyslogMessage(facility, severity);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<{0}>1 - - - - - -", expectedPriorityValue), serializedMsg);
+			var serializedMsg = SerializeRfc5424(msg);
+			Assert.Equal($"<{expectedPriorityValue}>1 {TimestampRegex} - - - - -",
+						 serializedMsg,
+						 new RegexComparer());
 		}
 
 		[Fact]
@@ -35,8 +36,8 @@ namespace SyslogNet.Client.Tests.Serialization
 
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, utcDateTime);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 {0} - - - - -", expectedTimestamp), serializedMsg);
+			var serializedMsg = SerializeRfc5424(msg);
+			Assert.Equal($"<11>1 {expectedTimestamp} - - - - - -", serializedMsg);
 		}
 
 		[Fact]
@@ -48,8 +49,8 @@ namespace SyslogNet.Client.Tests.Serialization
 
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, knownDateTimeOffset);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 {0} - - - - -", expectedTimestamp), serializedMsg);
+			var serializedMsg = SerializeRfc5424(msg);
+			Assert.Equal($"<11>1 {expectedTimestamp} - - - - - -", serializedMsg);
 		}
 
 		[Theory]
@@ -59,8 +60,10 @@ namespace SyslogNet.Client.Tests.Serialization
 		{
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, hostName: hostName);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 - {0} - - - -", expectedHostName), serializedMsg);
+			var serializedMsg = SerializeRfc5424(msg);
+			Assert.Equal($"<11>1 {TimestampRegex} {expectedHostName} - - - -",
+				serializedMsg,
+				new RegexComparer());
 		}
 
 		[Theory]
@@ -70,8 +73,10 @@ namespace SyslogNet.Client.Tests.Serialization
 		{
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, appName: appName);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 - - {0} - - -", expectedAppName), serializedMsg);
+			var serializedMsg = SerializeRfc5424(msg);
+			Assert.Equal($"<11>1 {TimestampRegex} - {expectedAppName} - - -",
+				serializedMsg,
+				new RegexComparer());
 		}
 
 		[Theory]
@@ -81,8 +86,10 @@ namespace SyslogNet.Client.Tests.Serialization
 		{
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, procId: procId);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 - - - {0} - -", expectedProcId), serializedMsg);
+			var serializedMsg = SerializeRfc5424(msg);
+			Assert.Equal($"<11>1 {TimestampRegex} - - {expectedProcId} - -",
+				serializedMsg,
+				new RegexComparer());
 		}
 
 		[Theory]
@@ -92,8 +99,10 @@ namespace SyslogNet.Client.Tests.Serialization
 		{
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, msgId: msgId);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.Equal(String.Format("<11>1 - - - - {0} -", expectedMsgId), serializedMsg);
+			var serializedMsg = SerializeRfc5424(msg);
+			Assert.Equal($"<11>1 {TimestampRegex} - - - {expectedMsgId} -",
+				serializedMsg,
+				new RegexComparer());
 	    }
 
 	    [Theory]
@@ -103,22 +112,24 @@ namespace SyslogNet.Client.Tests.Serialization
 	    {
 	        var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, message: message);
 
-	        string serializedMsg = sut.Serialize(msg);
+		    var serializedMsg = SerializeRfc5424(msg);
 
-	        string messagePrefix = "<11>1 - - - - - - ";
-	        Assert.True(serializedMsg.StartsWith(messagePrefix));
+		    var messagePrefix = $"<11>1 {TimestampRegex} - - - - - ";
+		    Assert.Equal(messagePrefix,
+			    serializedMsg,
+			    new RegexComparer());
 
-	        int messageIndex = 0;
+		    var messageIndex = 0;
 	        var bom = new[] { (byte)239 /*EF*/, (byte)187 /*BB*/, (byte)191 /*BF*/ };
 
-	        char[] bomChars = Encoding.UTF8.GetChars(bom);
-	        foreach (char bomChar in bomChars)
+		    var bomChars = Encoding.UTF8.GetChars(bom);
+	        foreach (var bomChar in bomChars)
 	        {
-	            char c = serializedMsg[messagePrefix.Length + messageIndex++];
+	            var c = serializedMsg[messagePrefix.Length + messageIndex++];
 	            Assert.Equal(bomChar, c);
 	        }
 
-	        string utf8MessagePart = serializedMsg.Substring(messagePrefix.Length + bomChars.Length);
+	        var utf8MessagePart = serializedMsg.Substring(messagePrefix.Length + bomChars.Length);
 	        Assert.Equal(expectedMessage, utf8MessagePart);
 	    }
 
@@ -135,10 +146,11 @@ namespace SyslogNet.Client.Tests.Serialization
 	        };
 	        var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, structuredDataElements:structuredDataElements.ToArray());
 
-	        string serializedMsg = sut.Serialize(msg);
+		    var serializedMsg = SerializeRfc5424(msg);
 
-	        string messagePrefix = $"<11>1 - - - - - [{sdi} {key}=\"{value}\"]";
-	        Assert.True(serializedMsg.StartsWith(messagePrefix));
+		    Assert.Equal($"<11>1 {TimestampRegex} - - - - [{sdi} {key}=\"{value}\"] -",
+			    serializedMsg,
+			    new RegexComparer());
 	    }
 
 	    [Fact]
@@ -159,10 +171,11 @@ namespace SyslogNet.Client.Tests.Serialization
             };
 	        var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, structuredDataElements: structuredDataElements.ToArray());
 
-	        string serializedMsg = sut.Serialize(msg);
+		    var serializedMsg = SerializeRfc5424(msg);
 
-	        string messagePrefix = $"<11>1 - - - - - [{sdi1} {key1}=\"{value1}\"][{sdi2} {key2}=\"{value2}\"]";
-	        Assert.True(serializedMsg.StartsWith(messagePrefix));
+		    Assert.Equal($"<11>1 {TimestampRegex} - - - - [{sdi1} {key1}=\"{value1}\"][{sdi2} {key2}=\"{value2}\"] -",
+			    serializedMsg,
+			    new RegexComparer());
 	    }
 
         private static SyslogMessage CreateMinimalSyslogMessage(
@@ -176,7 +189,18 @@ namespace SyslogNet.Client.Tests.Serialization
 			string message = null,
 			params StructuredDataElement[] structuredDataElements)
 		{
-			return new SyslogMessage(dateTimeOffset, facility, severity, hostName, appName, procId, msgId, message, structuredDataElements);
+			return new SyslogMessage
+			{
+				Timestamp = dateTimeOffset,
+				Facility = facility,
+				Severity = severity,
+				HostName = hostName,
+				AppName = appName,
+				ProcId = procId,
+				MsgId = msgId,
+				Message = message,
+				StructuredDataElements = structuredDataElements
+			};
 		}
 	}
 }

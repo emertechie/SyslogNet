@@ -1,19 +1,12 @@
 using System;
-using SyslogNet.Client.Serialization;
 using Xunit;
 using Xunit.Extensions;
+using static SyslogNet.Client.Tests.Serialization.SyslogSerializerExtensionsForTests;
 
 namespace SyslogNet.Client.Tests.Serialization
 {
 	public class SyslogRfc3164MessageSerializerTests
 	{
-		private readonly SyslogRfc3164MessageSerializer sut;
-
-		public SyslogRfc3164MessageSerializerTests()
-		{
-			sut = new SyslogRfc3164MessageSerializer();
-		}
-
 		[Theory]
 		[InlineData(Facility.KernelMessages, Severity.Emergency, 0)]
 		[InlineData(Facility.LocalUse4, Severity.Notice, 165)]
@@ -21,8 +14,8 @@ namespace SyslogNet.Client.Tests.Serialization
 		{
 			var msg = CreateMinimalSyslogMessage(facility, severity);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<{0}>", expectedPriorityValue)));
+			var serializedMsg = SerializeRfc3164(msg);
+			Assert.True(serializedMsg.StartsWith($"<{expectedPriorityValue}>"));
 		}
 
 		[Theory]
@@ -33,8 +26,8 @@ namespace SyslogNet.Client.Tests.Serialization
 			DateTimeOffset? dateTime = DateTime.Parse(dateTimeStr);
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<11>{0}", expectedFormat)));
+			var serializedMsg = SerializeRfc3164(msg);
+			Assert.True(serializedMsg.StartsWith($"<11>{expectedFormat}"));
 		}
 
 		[Theory]
@@ -45,8 +38,8 @@ namespace SyslogNet.Client.Tests.Serialization
 			DateTimeOffset? dateTime = DateTime.Parse("2013-01-18 17:00:00");
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, hostName);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 {0}", hostName)));
+			var serializedMsg = SerializeRfc3164(msg);
+			Assert.True(serializedMsg.StartsWith($"<11>Jan 18 17:00:00 {hostName}"));
 		}
 
 		[Fact]
@@ -57,8 +50,8 @@ namespace SyslogNet.Client.Tests.Serialization
 			DateTimeOffset? dateTime = DateTime.Parse("2013-01-18 17:00:00");
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, "FooMachine", appName);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 FooMachine {0}:", appName)));
+			var serializedMsg = SerializeRfc3164(msg);
+			Assert.True(serializedMsg.StartsWith($"<11>Jan 18 17:00:00 FooMachine {appName}:"));
 		}
 
 		[Fact]
@@ -69,8 +62,8 @@ namespace SyslogNet.Client.Tests.Serialization
 			DateTimeOffset? dateTime = DateTime.Parse("2013-01-18 17:00:00");
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, "FooMachine", "MyApp", message);
 
-			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 FooMachine MyApp:{0}", message)));
+			var serializedMsg = SerializeRfc3164(msg);
+			Assert.True(serializedMsg.StartsWith($"<11>Jan 18 17:00:00 FooMachine MyApp:{message}"));
 		}
 
 		private static SyslogMessage CreateMinimalSyslogMessage(
@@ -81,10 +74,15 @@ namespace SyslogNet.Client.Tests.Serialization
 			string appName = null,
 			string message = null)
 		{
-			const string procId = null;
-			const string msgId = null;
-
-			return new SyslogMessage(dateTimeOffset, facility, severity, hostName, appName, procId, msgId, message);
+			return new SyslogMessage
+			{
+				Timestamp = dateTimeOffset,
+				Facility = facility,
+				Severity = severity,
+				HostName = hostName,
+				AppName = appName,
+				Message = message
+			};
 		}
 	}
 }

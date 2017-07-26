@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SyslogNet.Client</RootNamespace>
     <AssemblyName>SyslogNet.Client</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -40,30 +40,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommunicationsException.cs" />
+    <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Facility.cs" />
-    <Compile Include="Serialization\ISyslogMessageSerializer.cs" />
-    <Compile Include="Serialization\SyslogMessageSerializerExtensions.cs" />
     <Compile Include="Severity.cs" />
     <Compile Include="StructuredDataElement.cs" />
-    <Compile Include="Serialization\SyslogMessageSerializerBase.cs" />
     <Compile Include="Serialization\SyslogRfc3164MessageSerializer.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SyslogClient.cs" />
+    <Compile Include="SyslogEncryptedTcpSender.cs" />
     <Compile Include="SyslogMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\SyslogRfc5424MessageSerializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Serialization\SyslogLocalMessageSerializer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Transport\ISyslogMessageSender.cs" />
-    <Compile Include="Transport\SyslogTcpSender.cs" />
-    <Compile Include="Transport\SyslogEncryptedTcpSender.cs" />
-    <Compile Include="Transport\SyslogTransportException.cs" />
-    <Compile Include="Transport\SyslogUdpSender.cs" />
-    <Compile Include="Transport\SyslogLocalSender.cs" />
+    <Compile Include="Utils\SyslogFormat.cs" />
+    <Compile Include="Utils\SyslogException.cs" />
+    <Compile Include="Utils\SyslogFraming.cs" />
+    <Compile Include="Utils\SyslogTransport.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
