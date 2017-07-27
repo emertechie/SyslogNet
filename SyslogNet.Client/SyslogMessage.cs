@@ -5,16 +5,6 @@ namespace SyslogNet.Client
 {
 	public class SyslogMessage
 	{
-		private readonly Facility facility;
-		private readonly Severity severity;
-		private readonly string hostName;
-		private readonly string appName;
-		private readonly string procId;
-		private readonly string msgId;
-		private readonly string message;
-		private readonly IEnumerable<StructuredDataElement> structuredDataElements;
-		private readonly DateTimeOffset? dateTimeOffset;
-		
 		public static Facility DefaultFacility = Facility.UserLevelMessages;
 		public static Severity DefaultSeverity = Severity.Informational;
 
@@ -38,10 +28,10 @@ namespace SyslogNet.Client
 			string appName,
 			string message)
 		{
-			this.facility = facility;
-			this.severity = severity;
-			this.appName = appName;
-			this.message = message;
+			Facility = facility;
+			Severity = severity;
+			AppName = appName;
+			Message = message;
 		}
 
 		/// <summary>
@@ -55,12 +45,12 @@ namespace SyslogNet.Client
 			string appName,
 			string message)
 		{
-			this.dateTimeOffset = dateTimeOffset;
-			this.facility = facility;
-			this.severity = severity;
-			this.hostName = hostName;
-			this.appName = appName;
-			this.message = message;
+			DateTimeOffset = dateTimeOffset;
+			Facility = facility;
+			Severity = severity;
+			HostName = hostName;
+			AppName = appName;
+			Message = message;
 		}
 
 		/// <summary>
@@ -78,9 +68,9 @@ namespace SyslogNet.Client
 			params StructuredDataElement[] structuredDataElements)
 			: this(dateTimeOffset, facility, severity, hostName, appName, message)
 		{
-			this.procId = procId;
-			this.msgId = msgId;
-			this.structuredDataElements = structuredDataElements;
+			ProcId = procId;
+			MsgId = msgId;
+			StructuredDataElements = structuredDataElements;
 		}
 
 		public int Version
@@ -88,49 +78,22 @@ namespace SyslogNet.Client
 			get { return 1; }
 		}
 
-		public Facility Facility
-		{
-			get { return facility; }
-		}
+		public Facility Facility { get; set; }
 
-		public Severity Severity
-		{
-			get { return severity; }
-		}
+		public Severity Severity { get; set; }
 
-		public DateTimeOffset? DateTimeOffset
-		{
-			get { return dateTimeOffset; }
-		}
+		public DateTimeOffset? DateTimeOffset { get; set; }
 
-		public string HostName
-		{
-			get { return hostName; }
-		}
+		public string HostName { get; set; }
 
-		public string AppName
-		{
-			get { return appName; }
-		}
+		public string AppName { get; set; }
 
-		public string ProcId
-		{
-			get { return procId; }
-		}
+		public string ProcId { get; set; }
 
-		public string MsgId
-		{
-			get { return msgId; }
-		}
+		public string MsgId { get; set; }
 
-		public string Message
-		{
-			get { return message; }
-		}
+		public string Message { get; set; }
 
-		public IEnumerable<StructuredDataElement> StructuredDataElements
-		{
-			get { return structuredDataElements; }
-		}
+		public IEnumerable<StructuredDataElement> StructuredDataElements { get; set; }
 	}
 }
