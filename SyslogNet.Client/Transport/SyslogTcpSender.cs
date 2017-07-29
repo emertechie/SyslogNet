@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using SyslogNet.Client.Serialization;
 
 namespace SyslogNet.Client.Transport
@@ -40,6 +41,11 @@ namespace SyslogNet.Client.Transport
 
 		public void Connect()
 		{
+			if (tcpClient != null)
+			{
+				throw new InvalidOperationException("Already connected");
+			}
+
 			try
 			{
 				tcpClient = new TcpClient(hostname, port);
@@ -51,11 +57,37 @@ namespace SyslogNet.Client.Transport
 				throw;
 			}
 		}
+		
+		public async Task ConnectAsync()
+		{
+			if (tcpClient != null)
+			{
+				throw new InvalidOperationException("Already connected");
+			}
+
+			try
+			{
+				tcpClient = new TcpClient();
+				await tcpClient.ConnectAsync(hostname, port);
+				transportStream = tcpClient.GetStream();
+			}
+			catch
+			{
+				Dispose();
+				throw;
+			}
+		}
 
 		public virtual void Reconnect()
 		{
 			Disconnect();
 			Connect();
+		}
+		
+		public Task ReconnectAsync()
+		{
+			Dispose();
+			return ConnectAsync();
 		}
 
 		public void Disconnect()
@@ -87,22 +119,7 @@ namespace SyslogNet.Client.Transport
 
 			using (MemoryStream memoryStream = new MemoryStream())
 			{
-				var datagramBytes = serializer.Serialize(message);
-
-				if (messageTransfer.Equals(MessageTransfer.OctetCounting))
-				{
-					byte[] messageLength = Encoding.ASCII.GetBytes(datagramBytes.Length.ToString());
-					memoryStream.Write(messageLength, 0, messageLength.Length);
-					memoryStream.WriteByte(32); // Space
-				}
-
-				memoryStream.Write(datagramBytes, 0, datagramBytes.Length);
-
-				if (messageTransfer.Equals(MessageTransfer.NonTransparentFraming))
-				{
-					memoryStream.WriteByte(trailer); // LF
-				}
-
+				SerializeMessageToStream(message, serializer, memoryStream);
 				transportStream.Write(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
 			}
 
@@ -121,9 +138,70 @@ namespace SyslogNet.Client.Transport
 				transportStream.Flush();
 		}
 
+		public Task SendAsync(SyslogMessage message, ISyslogMessageSerializer serializer)
+		{
+			return SendAsync(message, serializer, default(CancellationToken));
+		}
+
+		public Task SendAsync(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
+		{
+			return SendAsync(messages, serializer, default(CancellationToken));
+		}
+
+		public async Task SendAsync(SyslogMessage message, ISyslogMessageSerializer serializer, CancellationToken token)
+		{
+			if (transportStream == null)
+			{
+				throw new IOException("No transport stream exists");
+			}
+
+			using (var memoryStream = new MemoryStream())
+			{
+				SerializeMessageToStream(message, serializer, memoryStream);
+				await transportStream.WriteAsync(memoryStream.GetBuffer(), 0, (int)memoryStream.Length, token);
+			}
+
+			if (!(transportStream is NetworkStream))
+			{
+				await transportStream.FlushAsync(token);
+			}
+		}
+
+		public async Task SendAsync(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer, CancellationToken token)
+		{
+			foreach (var message in messages)
+			{
+				await SendAsync(message, serializer, token);
+			}
+
+			if (!(transportStream is NetworkStream))
+			{
+				await transportStream.FlushAsync(token);
+			}
+		}
+
 		public void Dispose()
 		{
 			Disconnect();
+		}
+
+		private void SerializeMessageToStream(SyslogMessage message, ISyslogMessageSerializer serializer, Stream memoryStream)
+		{
+			var datagramBytes = serializer.Serialize(message);
+
+			if (messageTransfer.Equals(MessageTransfer.OctetCounting))
+			{
+				var messageLength = Encoding.ASCII.GetBytes(datagramBytes.Length.ToString());
+				memoryStream.Write(messageLength, 0, messageLength.Length);
+				memoryStream.WriteByte(32); // Space
+			}
+
+			memoryStream.Write(datagramBytes, 0, datagramBytes.Length);
+
+			if (messageTransfer.Equals(MessageTransfer.NonTransparentFraming))
+			{
+				memoryStream.WriteByte(trailer); // LF
+			}
 		}
 	}
 }
