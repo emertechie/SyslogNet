@@ -12,7 +12,7 @@ namespace SyslogNet.Client.Transport
 		{
 			PlatformID platform = Environment.OSVersion.Platform;
 			if (!(platform == PlatformID.MacOSX || platform == PlatformID.Unix)) {
-				throw new CommunicationsException("SyslogLocalSender is only available on Unix-like systems (e.g., Linux, BSD, OS X)");
+				throw new SyslogNetException("SyslogLocalSender is only available on Unix-like systems (e.g., Linux, BSD, OS X)");
 			}
 		}
 

@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommunicationsException.cs" />
+    <Compile Include="SyslogNetException.cs" />
     <Compile Include="Facility.cs" />
     <Compile Include="Serialization\ISyslogMessageSerializer.cs" />
     <Compile Include="Serialization\SyslogMessageSerializerExtensions.cs" />
