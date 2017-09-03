@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Runtime.Serialization;
-
 namespace SyslogNet.Client
 {
+	using System;
+	using System.Runtime.Serialization;
+
 	[Serializable]
 	public class SyslogNetException : Exception
 	{

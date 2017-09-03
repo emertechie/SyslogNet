@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using Xunit;
-
 namespace SyslogNet.Client.Tests
 {
+	using System.Collections.Generic;
+	using Xunit;
+
 	public class StructuredDataElementTests
 	{
 		[Fact]

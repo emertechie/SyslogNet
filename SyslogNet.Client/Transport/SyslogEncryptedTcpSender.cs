@@ -1,11 +1,11 @@
-﻿using System;
-using System.Net.Security;
-using System.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-
-namespace SyslogNet.Client.Transport
+﻿namespace SyslogNet.Client.Transport
 {
+	using System;
+	using System.Net.Security;
+	using System.Security;
+	using System.Security.Cryptography.X509Certificates;
+	using System.Threading;
+
 	public class SyslogEncryptedTcpSender : SyslogTcpSender
 	{
 		protected int IOTimeout;
