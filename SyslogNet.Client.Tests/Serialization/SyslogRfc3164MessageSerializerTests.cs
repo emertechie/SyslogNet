@@ -1,7 +1,6 @@
 using System;
 using SyslogNet.Client.Serialization;
 using Xunit;
-using Xunit.Extensions;
 
 namespace SyslogNet.Client.Tests.Serialization
 {
@@ -22,7 +21,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(facility, severity);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<{0}>", expectedPriorityValue)));
+			Assert.StartsWith($"<{expectedPriorityValue}>", serializedMsg);
 		}
 
 		[Theory]
@@ -34,7 +33,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<11>{0}", expectedFormat)));
+			Assert.StartsWith($"<11>{expectedFormat}", serializedMsg);
 		}
 
 		[Theory]
@@ -46,7 +45,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, hostName);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 {0}", hostName)));
+			Assert.StartsWith($"<11>Jan 18 17:00:00 {hostName}", serializedMsg);
 		}
 
 		[Fact]
@@ -58,7 +57,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, "FooMachine", appName);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 FooMachine {0}:", appName)));
+			Assert.StartsWith($"<11>Jan 18 17:00:00 FooMachine {appName}:", serializedMsg);
 		}
 
 		[Fact]
@@ -70,7 +69,7 @@ namespace SyslogNet.Client.Tests.Serialization
 			var msg = CreateMinimalSyslogMessage(Facility.UserLevelMessages, Severity.Error, dateTime, "FooMachine", "MyApp", message);
 
 			string serializedMsg = sut.Serialize(msg);
-			Assert.True(serializedMsg.StartsWith(String.Format("<11>Jan 18 17:00:00 FooMachine MyApp:{0}", message)));
+			Assert.StartsWith($"<11>Jan 18 17:00:00 FooMachine MyApp:{message}", serializedMsg);
 		}
 
 		private static SyslogMessage CreateMinimalSyslogMessage(
