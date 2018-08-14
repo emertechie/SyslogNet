@@ -26,6 +26,7 @@ StyleCop.Cache
 *.ReSharper
 *ncrunch*
 *.crunchsolution.cache
+.vs/
 
 # VIM #
 #######
