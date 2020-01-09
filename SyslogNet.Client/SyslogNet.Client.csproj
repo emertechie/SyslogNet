@@ -2,15 +2,15 @@
   <PropertyGroup>
     <AssemblyName>SyslogNet.Client</AssemblyName>
     <Authors>Andrew Smith</Authors>
-    <Copyright>Copyright © 2013-2018</Copyright>
+    <Copyright>Copyright © 2013-2020</Copyright>
     <Description>.Net Syslog client. Supports both RFC 3164 and RFC 5424 Syslog standards as well as UDP and encrypted TCP transports.</Description>
     <PackageLicenseUrl>https://github.com/emertechie/SyslogNet/blob/master/licence.md</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/emertechie/SyslogNet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/emertechie/SyslogNet</RepositoryUrl>
     <RootNamespace>SyslogNet.Client</RootNamespace>
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
-    <Version>0.3.3</Version>
-    <AssemblyVersion>1.0.3.3</AssemblyVersion>
+    <Version>0.3.4</Version>
+    <AssemblyVersion>1.0.3.4</AssemblyVersion>
     <FileVersion>1.0.3.3</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
