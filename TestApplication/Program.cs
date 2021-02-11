@@ -71,12 +71,16 @@ namespace TestApplication
 			// CommandLine.ParserResultExtensions.WithParsed(CommandLine.Parser.Default.ParseArguments<Options>(args), opt => options = opt);
 			
 			SyslogNet.Client.SyslogOptions options = new SyslogNet.Client.SyslogOptions();
-			options.NetworkProtocol = SyslogNet.Client.NetworkProtocols.TLS;
-			options.InferDefaultPort();
+			// options.NetworkProtocol = SyslogNet.Client.NetworkProtocols.TCP;
+			// options.InferDefaultPort();
+			// options.SyslogServerPort = 515; // Visual Syslog 
+			// options.SyslogVersion = SyslogNet.Client.SyslogVersions.Rfc3164;
 
 			System.Console.WriteLine(options);
 
-			string logMessage = "Test message 1 äöüÄÖÜß 你好世界 Привет мир";
+			string logMessage = "Test message 112 äöüÄÖÜß 你好世界 Привет мир";
+			logMessage = "test123";
+
 
 			SyslogNet.Client.SyslogMessage msg1 = CreateSyslogMessage(options, logMessage);
 			msg1.Send(options);
