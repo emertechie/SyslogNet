@@ -51,9 +51,18 @@ namespace SyslogNet.Client.Transport
 			((SslStream)transportStream).AuthenticateAsClient(
 				hostname,
 				null,
+#if NETSTANDARD
+				// Tls11 = 768,
+				// Tls12 = 3072,
+				// Tls13 = 12288
+				System.Security.Authentication.SslProtocols.Tls12,
+#else
 				System.Security.Authentication.SslProtocols.Tls,
+#endif
 				false
 			);
+
+
 
 			if (!((SslStream)transportStream).IsEncrypted)
 				throw new SecurityException("Could not establish an encrypted connection");
