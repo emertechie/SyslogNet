@@ -8,7 +8,7 @@
     <PackageProjectUrl>https://github.com/emertechie/SyslogNet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/emertechie/SyslogNet</RepositoryUrl>
     <RootNamespace>SyslogNet.Client</RootNamespace>
-    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net20;net40;netstandard2.0</TargetFrameworks>
     <Version>0.3.3</Version>
     <AssemblyVersion>1.0.3.3</AssemblyVersion>
     <FileVersion>1.0.3.3</FileVersion>
@@ -18,5 +18,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net20'">
+    <DefineConstants>DOTNET_20</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net40'">
+    <DefineConstants>DOTNET_40</DefineConstants>
   </PropertyGroup>
 </Project>

@@ -20,7 +20,7 @@ namespace SyslogNet.Client.Serialization
 		public void Serialize(SyslogMessage message, Stream stream)
 		{
 			// Local syslog serialization only cares about the Message string
-			if (!String.IsNullOrWhiteSpace(message.Message))
+			if (!message.Message.IsNullOrWhiteSpace())
 			{
 				byte[] streamBytes = Encoding.GetBytes(message.Message);
 				stream.Write(streamBytes, 0, streamBytes.Length);
