@@ -8,6 +8,14 @@ namespace SyslogNet.Client
 		public static Facility DefaultFacility = Facility.UserLevelMessages;
 		public static Severity DefaultSeverity = Severity.Informational;
 
+
+		public void Send(SyslogOptions options)
+		{
+			options.Sender.Send(this, options.Serializer);
+		}
+
+
+
 		/// <summary>
 		/// Convenience overload for sending local syslog messages with default facility (UserLevelMessages)
 		/// </summary>
