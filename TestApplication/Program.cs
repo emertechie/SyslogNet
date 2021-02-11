@@ -69,10 +69,9 @@ namespace TestApplication
 			// delegate (SyslogNet.Client.SyslogOptions a) { options = a; }
 			// CommandLine.Parser.Default.ParseArguments<Options>(args).WithParsed(opt => options = opt);
 			// CommandLine.ParserResultExtensions.WithParsed(CommandLine.Parser.Default.ParseArguments<Options>(args), opt => options = opt);
-
-
+			
 			SyslogNet.Client.SyslogOptions options = new SyslogNet.Client.SyslogOptions();
-			options.Protocol = SyslogNet.Client.NetworkProtocol.TLS;
+			options.NetworkProtocol = SyslogNet.Client.NetworkProtocols.TLS;
 			options.InferDefaultPort();
 
 			System.Console.WriteLine(options);

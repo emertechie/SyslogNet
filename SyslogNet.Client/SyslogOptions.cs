@@ -2,7 +2,22 @@
 namespace SyslogNet.Client
 {
 
-	public enum NetworkProtocol
+	
+	[System.Flags]
+	public enum SslProtocols
+	{
+		None = 0, // Allows the operating system to choose the best protocol to use
+		Ssl2 = 12, // SSL 2.0 
+		Ssl3 = 48, // SSL 3.0
+		Tls = 192, // TLS 1.0, RFC 2246 
+		Default = 240, // Negotiate between SSL 3.0 or TLS 1.0
+		Tls11 = 768, // RFC 4346 
+		Tls12 = 3072, // RFC 5246 
+		Tls13 = 12288 // RFC 8446 
+	}
+
+
+	public enum NetworkProtocols
 	{
 		UPD,
 		TCP,
@@ -10,7 +25,7 @@ namespace SyslogNet.Client
 	}
 
 
-	public enum Version
+	public enum SyslogVersions
 	{
 		Rfc5424,
 		Rfc3164, // obsolete - for backwards compatiblity 
@@ -44,11 +59,15 @@ namespace SyslogNet.Client
 		public int SyslogServerPort { get; set; }
 
 		// [CommandLine.Option('v', "version", Required = false, Default = "5424", HelpText = "The version of syslog protocol to use. Possible values are '3164' and '5424' (from corresponding RFC documents) or 'local' to send messages to a local syslog (only on Linux or OS X). Default is '5424'")]
-		public Version SyslogVersion { get; set; }
+		public SyslogVersions SyslogVersion { get; set; }
 
 		// [CommandLine.Option('o', "protocol", Required = false, Default = "tcp", HelpText = "The network protocol to use. Possible values are 'tcp' or 'udp' to send to a remote syslog server, or 'local' to send to a local syslog over Unix sockets (only on Linux or OS X). Default is 'tcp'. Note: TCP always uses SSL connection.")]
 
-		public NetworkProtocol Protocol { get; set; }
+		public NetworkProtocols NetworkProtocol { get; set; }
+
+		public SslProtocols SslProtocol { get; set; }
+
+		
 
 
 		// [CommandLine.Option('c', "cert", Required = false, HelpText = "Optional path to a CA certificate used to verify Syslog server certificate when using TCP protocol")]
@@ -60,22 +79,29 @@ namespace SyslogNet.Client
 			this.ProcId = System.Diagnostics.Process.GetCurrentProcess().Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
 			this.LocalHostName = System.Environment.MachineName;
 
-			this.SyslogVersion = Version.Rfc5424;
+			this.SyslogVersion = SyslogVersions.Rfc5424;
 
 			this.SyslogServerHostname = "127.0.0.1";
 			
-			this.Protocol = NetworkProtocol.UPD;
+			this.NetworkProtocol = NetworkProtocols.UPD;
 			this.InferDefaultPort();
+
+#if NETSTANDARD
+			this.SslProtocol = SslProtocols.Tls12;
+#else
+			this.SslProtocol = SslProtocols.Tls;
+#endif
+
 		}
 
 		public void InferDefaultPort()
 		{
-			switch (this.Protocol)
+			switch (this.NetworkProtocol)
 			{
-				case NetworkProtocol.TCP:
+				case NetworkProtocols.TCP:
 					this.SyslogServerPort = 1468; // TCP 
 					break;
-				case NetworkProtocol.TLS:
+				case NetworkProtocols.TLS:
 					this.SyslogServerPort = 6514; // TLS 
 					break;
 				default:
@@ -91,9 +117,9 @@ namespace SyslogNet.Client
 			{
 				switch (this.SyslogVersion)
 				{
-					case Version.Rfc5424:
+					case SyslogVersions.Rfc5424:
 						return new SyslogNet.Client.Serialization.SyslogRfc5424MessageSerializer();
-					case Version.Rfc3164:
+					case SyslogVersions.Rfc3164:
 						return new SyslogNet.Client.Serialization.SyslogRfc3164MessageSerializer();
 					default:
 						return new SyslogNet.Client.Serialization.SyslogLocalMessageSerializer();
@@ -108,14 +134,14 @@ namespace SyslogNet.Client
 		{
 			get
 			{
-				switch (this.Protocol)
+				switch (this.NetworkProtocol)
 				{
-					case NetworkProtocol.UPD:
+					case NetworkProtocols.UPD:
 						return new SyslogNet.Client.Transport.SyslogUdpSender(this.SyslogServerHostname, this.SyslogServerPort);
-					case NetworkProtocol.TCP:
+					case NetworkProtocols.TCP:
 						return new SyslogNet.Client.Transport.SyslogTcpSender(this.SyslogServerHostname, this.SyslogServerPort);
-					case NetworkProtocol.TLS:
-						return new SyslogNet.Client.Transport.SyslogEncryptedTcpSender(this.SyslogServerHostname, this.SyslogServerPort, -1, true);
+					case NetworkProtocols.TLS:
+						return new SyslogNet.Client.Transport.SyslogEncryptedTcpSender(this.SyslogServerHostname, this.SyslogServerPort, this.SslProtocol, -1, true);
 					default:
 						return new SyslogNet.Client.Transport.SyslogLocalSender();
 				}

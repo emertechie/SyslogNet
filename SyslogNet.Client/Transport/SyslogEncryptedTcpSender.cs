@@ -6,12 +6,17 @@ using System.Threading;
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogEncryptedTcpSender : SyslogTcpSender
+	public class SyslogEncryptedTcpSender 
+		: SyslogTcpSender
 	{
 		protected int IOTimeout;
+		protected SslProtocols _sslProtocol;
+
 		public Boolean IgnoreTLSChainErrors { get; private set; }
 
 		protected MessageTransfer _messageTransfer;
+
+
 		public override MessageTransfer messageTransfer
 		{
 			get { return _messageTransfer; }
@@ -26,7 +31,13 @@ namespace SyslogNet.Client.Transport
 			}
 		}
 
-		public SyslogEncryptedTcpSender(string hostname, int port, int timeout = Timeout.Infinite, bool ignoreChainErrors = false) : base(hostname, port)
+		public SyslogEncryptedTcpSender(
+			  string hostname
+			, int port 
+			, SslProtocols sslProtocol 
+			, int timeout = Timeout.Infinite
+			, bool ignoreChainErrors = false) 
+			: base(hostname, port)
 		{
 			IOTimeout = timeout;
 			IgnoreTLSChainErrors = ignoreChainErrors;
@@ -41,7 +52,8 @@ namespace SyslogNet.Client.Transport
 
 		private void startTLS()
 		{
-			transportStream = new SslStream(tcpClient.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate))
+			transportStream = new SslStream(tcpClient.GetStream(), false
+				, new RemoteCertificateValidationCallback(ValidateServerCertificate))
 			{
 				ReadTimeout = IOTimeout,
 				WriteTimeout = IOTimeout
@@ -51,14 +63,7 @@ namespace SyslogNet.Client.Transport
 			((SslStream)transportStream).AuthenticateAsClient(
 				hostname,
 				null,
-#if NETSTANDARD
-				// Tls11 = 768,
-				// Tls12 = 3072,
-				// Tls13 = 12288
-				System.Security.Authentication.SslProtocols.Tls12,
-#else
-				System.Security.Authentication.SslProtocols.Tls,
-#endif
+				(System.Security.Authentication.SslProtocols)_sslProtocol,
 				false
 			);
 
