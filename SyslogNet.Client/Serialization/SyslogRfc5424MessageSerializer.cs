@@ -9,7 +9,7 @@ namespace SyslogNet.Client.Serialization
 	public class SyslogRfc5424MessageSerializer : SyslogMessageSerializerBase, ISyslogMessageSerializer
 	{
 		public const string NilValue = "-";
-		public static readonly HashSet<char> sdNameDisallowedChars = new HashSet<char>() {' ', '=', ']', '"' };
+		internal static readonly HashSet<char> sdNameDisallowedChars = new HashSet<char>() {' ', '=', ']', '"' };
 
 		private readonly char[] asciiCharsBuffer = new char[255];
 
@@ -79,7 +79,7 @@ namespace SyslogNet.Client.Serialization
 				writeStream(stream, Encoding.ASCII, NilValue);
 			}
 
-			if (!String.IsNullOrWhiteSpace(message.Message))
+			if (!message.Message.IsNullOrWhiteSpace())
 			{
 				// Space
 				stream.WriteByte(32);
@@ -100,19 +100,19 @@ namespace SyslogNet.Client.Serialization
 	{
 		public static string IfNotNullOrWhitespace(this string s, Func<string, string> action)
 		{
-			return String.IsNullOrWhiteSpace(s) ? s : action(s);
+			return s.IsNullOrWhiteSpace() ? s : action(s);
 		}
 
 		public static string FormatSyslogField(this string s, string replacementValue, int? maxLength = null)
 		{
-			return String.IsNullOrWhiteSpace(s)
+			return s.IsNullOrWhiteSpace()
 				? replacementValue
 				: maxLength.HasValue ? EnsureMaxLength(s, maxLength.Value) : s;
 		}
 
 		public static string EnsureMaxLength(this string s, int maxLength)
 		{
-			return String.IsNullOrWhiteSpace(s)
+			return s.IsNullOrWhiteSpace()
 				? s
 				: s.Length > maxLength ? s.Substring(0, maxLength) : s;
 		}
