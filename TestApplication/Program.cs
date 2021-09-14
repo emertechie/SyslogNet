@@ -33,6 +33,8 @@ namespace TestApplication
 			sd["Hello"] = "World";
 			sd["Привет"] = "мир";
 			sd["你好"] = "世界";
+			sd["nixda"] = "[]";
+			sd["foo[]bar"] = "{}";
 
 
 			SyslogNet.Client.StructuredDataElement sde = new SyslogNet.Client.StructuredDataElement("sdld", sd);
@@ -56,7 +58,7 @@ namespace TestApplication
 				message ?? (options.Message ?? 
 				  "Test message at " 
 				+ System.DateTime.UtcNow.ToString("dddd, dd.MM.yyyy HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture))
-				, null
+				, sde
 			);
 		} // End Function CreateSyslogMessage 
 

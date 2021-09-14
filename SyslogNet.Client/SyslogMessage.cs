@@ -95,14 +95,32 @@ namespace SyslogNet.Client
             string procId,
             string msgId,
             string message,
-            params StructuredDataElement[] structuredDataElements)
+            System.Collections.Generic.List<StructuredDataElement> structuredDataElements)
             : this(dateTimeOffset, facility, severity, hostName, appName, message)
         {
             ProcId = procId;
             MsgId = msgId;
-            if(structuredDataElements != null && structuredDataElements.Length > 0)
-                StructuredDataElements = new System.Collections.Generic.List<StructuredDataElement>( structuredDataElements);
+            StructuredDataElements = structuredDataElements;
         }
+
+
+        /// <summary>
+        /// Constructor for use when sending RFC 5424 messages
+        /// </summary>
+        public SyslogMessage(
+            System.DateTimeOffset? dateTimeOffset,
+            Facility facility,
+            Severity severity,
+            string hostName,
+            string appName,
+            string procId,
+            string msgId,
+            string message,
+            params StructuredDataElement[] structuredDataElements)
+            : this(dateTimeOffset, facility, severity, hostName, appName, procId, msgId, message
+                  , ((structuredDataElements != null && structuredDataElements.Length > 0) ? new System.Collections.Generic.List<StructuredDataElement>(structuredDataElements) : null)
+        )
+        { }
 
 
         public void Send(SyslogOptions options)
