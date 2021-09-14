@@ -8,7 +8,12 @@
     <PackageProjectUrl>https://github.com/emertechie/SyslogNet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/emertechie/SyslogNet</RepositoryUrl>
     <RootNamespace>SyslogNet.Client</RootNamespace>
-    <TargetFrameworks>net20;net40;netstandard2.0</TargetFrameworks>
+    
+    <!--
+    https://docs.microsoft.com/en-us/dotnet/standard/frameworks
+    -->
+    
+    <TargetFrameworks>net20;net35;net40;net45;net451;net452;net46;net461;net462;net47;net472;net48;netstandard2.0</TargetFrameworks>
     <Version>0.3.3</Version>
     <AssemblyVersion>1.0.3.3</AssemblyVersion>
     <FileVersion>1.0.3.3</FileVersion>
@@ -24,6 +29,10 @@
     <DefineConstants>DOTNET_20</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)'=='net35'">
+    <DefineConstants>DOTNET_35</DefineConstants>
+  </PropertyGroup>
+  
   <PropertyGroup Condition="'$(TargetFramework)'=='net40'">
     <DefineConstants>DOTNET_40</DefineConstants>
   </PropertyGroup>

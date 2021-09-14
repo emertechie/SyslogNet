@@ -1,27 +1,34 @@
-﻿using System;
-using System.Runtime.Serialization;
-
+﻿
 namespace SyslogNet.Client
 {
-	[Serializable]
-	public class SyslogNetException : Exception
+
+
+	[System.Serializable]
+	public class SyslogNetException 
+		: System.Exception
 	{
+
+
 		public SyslogNetException()
-		{
-		}
+		{ }
 
-		public SyslogNetException(string message) : base(message)
-		{
-		}
 
-		public SyslogNetException(string message, Exception inner) : base(message, inner)
-		{
-		}
+		public SyslogNetException(string message) 
+			: base(message)
+		{ }
 
-		protected SyslogNetException(
-			SerializationInfo info,
-			StreamingContext context) : base(info, context)
-		{
-		}
+
+		public SyslogNetException(string message, System.Exception inner) 
+			: base(message, inner)
+		{ }
+
+
+		protected SyslogNetException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) 
+			: base(info, context)
+		{ }
+
+
 	}
+
+
 }

@@ -1,19 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
+
 using SyslogNet.Client.Serialization;
+
 
 namespace SyslogNet.Client.Transport
 {
-	public class SyslogUdpSender : ISyslogMessageSender, IDisposable
+
+
+	public class SyslogUdpSender 
+		: ISyslogMessageSender, System.IDisposable
 	{
-		private readonly UdpClient udpClient;
+
+		private readonly System.Net.Sockets.UdpClient udpClient;
+
 
 		public SyslogUdpSender(string hostname, int port)
 		{
-			udpClient = new UdpClient(hostname, port);
+			udpClient = new System.Net.Sockets.UdpClient(hostname, port);
 		}
+
 
 		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
 		{
@@ -21,7 +25,8 @@ namespace SyslogNet.Client.Transport
 			udpClient.Send(datagramBytes, datagramBytes.Length);
 		}
 
-		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
+
+		public void Send(System.Collections.Generic.IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
 		{
 			foreach(SyslogMessage message in messages)
 			{
@@ -29,11 +34,20 @@ namespace SyslogNet.Client.Transport
 			}
 		}
 
-		public void Reconnect() { /* UDP is connectionless */ }
+
+		public void Reconnect() 
+		{ 
+			// UDP is connectionless 
+		}
+
 
 		public void Dispose()
 		{
 			udpClient.Close();
 		}
+
+
 	}
+
+
 }
