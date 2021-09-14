@@ -32,7 +32,7 @@ namespace SyslogNet.Client
         public string Message { get; set; }
 
 
-        public System.Collections.Generic.IEnumerable<StructuredDataElement> StructuredDataElements
+        public System.Collections.Generic.List<StructuredDataElement> StructuredDataElements
         {
             get; set;
         }
@@ -100,7 +100,8 @@ namespace SyslogNet.Client
         {
             ProcId = procId;
             MsgId = msgId;
-            StructuredDataElements = structuredDataElements;
+            if(structuredDataElements != null && structuredDataElements.Length > 0)
+                StructuredDataElements = new System.Collections.Generic.List<StructuredDataElement>( structuredDataElements);
         }
 
 

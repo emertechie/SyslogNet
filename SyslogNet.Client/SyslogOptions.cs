@@ -63,11 +63,23 @@ namespace SyslogNet.Client
 
         // [CommandLine.Option('o', "protocol", Required = false, Default = "tcp", HelpText = "The network protocol to use. Possible values are 'tcp' or 'udp' to send to a remote syslog server, or 'local' to send to a local syslog over Unix sockets (only on Linux or OS X). Default is 'tcp'. Note: TCP always uses SSL connection.")]
 
-        public NetworkProtocols NetworkProtocol { get; set; }
+
+        protected NetworkProtocols m_networkProtocol;
+
+
+        public NetworkProtocols NetworkProtocol
+        {
+            get { return this.m_networkProtocol; }
+            set
+            {
+                this.m_networkProtocol = value;
+                this.InferNetworkProtocol();
+            }
+        }
 
         public SslProtocols SslProtocol { get; set; }
 
-        public bool UseUtf8 { get; set; } = true;
+        public bool UseUtf8 { get; set; }
 
 
 
@@ -77,23 +89,31 @@ namespace SyslogNet.Client
 
         public SyslogOptions()
         {
+            this.UseUtf8 = true;
             this.AppName = System.AppDomain.CurrentDomain.FriendlyName;
             this.ProcId = System.Diagnostics.Process.GetCurrentProcess().Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
             this.LocalHostName = System.Environment.MachineName;
 
             this.SyslogVersion = SyslogVersions.Rfc5424;
-
             this.SyslogServerHostname = "127.0.0.1";
 
             this.NetworkProtocol = NetworkProtocols.UPD;
+            this.InferNetworkProtocol();
             this.InferDefaultPort();
+        }
 
-#if NETSTANDARD
-			this.SslProtocol = SslProtocols.Tls12;
-#else
-            this.SslProtocol = SslProtocols.Tls;
-#endif
 
+        public void InferNetworkProtocol()
+        {
+            if (this.NetworkProtocol == NetworkProtocols.TLS)
+            {
+                if (this.SslProtocol == SslProtocols.None)
+                    this.SslProtocol = SyslogNet.Client.SslProtocols.Tls;
+            }
+            else
+            {
+                this.SslProtocol = SyslogNet.Client.SslProtocols.None;
+            }
         }
 
 
