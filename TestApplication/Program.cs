@@ -2,34 +2,53 @@
 namespace TestApplication
 {
 
+	public class MyStructuredData
+	{
+		public string Hello = "World";
+		public int SomeNumber = 123;
+		public System.DateTime SomeTime = System.DateTime.Now;
+
+		private int SomePriveNumber = 456;
+		private string SomePrivateString = "I'm Private !";
+		private System.DateTime SomeOtherTime = System.DateTime.UtcNow;
+
+
+		public string HelloNull = null;
+		public int? SomeNumberNull = null;
+		public System.DateTime? SomeTimeNull = null;
+		public System.DateTime? SomeTimeNotNull = System.DateTime.UtcNow;
+
+	}
+
+
 
 	public class Program
-    {
+	{
 
 
 		private static SyslogNet.Client.SyslogMessage CreateSyslogMessage(
-              SyslogNet.Client.SyslogOptions options
+			  SyslogNet.Client.SyslogOptions options
 			, string message)
 		{
-            // https://www.syslog-ng.com/technical-documents/doc/syslog-ng-open-source-edition/3.16/administration-guide/option-description-log-msg-size
-            // Description: Maximum length of a message in bytes. 
-            // This length includes the entire message 
-            // (the data structure and individual fields). 
-            // The maximal value that can be set is 268435456 bytes(256MB). 
-            // For messages using the IETF-syslog message format(RFC5424), 
-            // the maximal size of the value of an SDATA field is 64kB.
-            // In most cases, it is not recommended to set log-msg-size() 
-            // higher than 10 MiB.
+			// https://www.syslog-ng.com/technical-documents/doc/syslog-ng-open-source-edition/3.16/administration-guide/option-description-log-msg-size
+			// Description: Maximum length of a message in bytes. 
+			// This length includes the entire message 
+			// (the data structure and individual fields). 
+			// The maximal value that can be set is 268435456 bytes(256MB). 
+			// For messages using the IETF-syslog message format(RFC5424), 
+			// the maximal size of the value of an SDATA field is 64kB.
+			// In most cases, it is not recommended to set log-msg-size() 
+			// higher than 10 MiB.
 
-            // https://stackoverflow.com/questions/3310875/find-syslog-max-message-length
-            // Keep in mind syslog is a protocol, 
-            // which means it sets minimums and makes recommendations. 
-            // I can't find a source to this, but I believe 
-            // the minimum length that should be supported is 1k, 
-            // with 64k being recommended.
+			// https://stackoverflow.com/questions/3310875/find-syslog-max-message-length
+			// Keep in mind syslog is a protocol, 
+			// which means it sets minimums and makes recommendations. 
+			// I can't find a source to this, but I believe 
+			// the minimum length that should be supported is 1k, 
+			// with 64k being recommended.
 
 
-            System.Collections.Generic.Dictionary<string, string> sd = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.InvariantCultureIgnoreCase);
+			System.Collections.Generic.Dictionary<string, string> sd = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.InvariantCultureIgnoreCase);
 			sd["Hello"] = "World";
 			sd["Привет"] = "мир";
 			sd["你好"] = "世界";
@@ -55,8 +74,8 @@ namespace TestApplication
 				options.AppName,
 				options.ProcId,
 				options.MsgType,
-				message ?? (options.Message ?? 
-				  "Test message at " 
+				message ?? (options.Message ??
+				  "Test message at "
 				+ System.DateTime.UtcNow.ToString("dddd, dd.MM.yyyy HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture))
 				, sde
 			);
@@ -76,13 +95,36 @@ namespace TestApplication
 
 		public static void Main(string[] args)
         {
+			MyStructuredData msd = new MyStructuredData();
+
+			System.Collections.Generic.Dictionary<string, string> dict = SyslogNet.Client.LinqHelper.GetStringDictionary(msd);
+			System.Console.WriteLine(dict);
+
+
+
+			System.Reflection.MemberInfo[] tnP = SyslogNet.Client.LinqHelper.GetFieldsAndProperties(msd.GetType());
+			SyslogNet.Client.Getter_t<MyStructuredData>[] gettrs = SyslogNet.Client.LinqHelper.GetGetters<MyStructuredData>();
+			SyslogNet.Client.Setter_t<MyStructuredData>[] settrs = SyslogNet.Client.LinqHelper.GetSetters<MyStructuredData>();
+
+			object o = gettrs[6](msd);
+			System.Console.WriteLine(o);
+
+			System.DateTime? dt = SyslogNet.Client.LinqHelper.ChangeType<System.DateTime?>(gettrs[5](msd));
+			System.Console.WriteLine(dt);
+			
+			settrs[6](msd, dt);
+
+
+
+
+
 			// System.Net.ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AllowAnything);
 
 			// SyslogNet.Client.SyslogOptions options = null;
 			// delegate (SyslogNet.Client.SyslogOptions a) { options = a; }
 			// CommandLine.Parser.Default.ParseArguments<Options>(args).WithParsed(opt => options = opt);
 			// CommandLine.ParserResultExtensions.WithParsed(CommandLine.Parser.Default.ParseArguments<Options>(args), opt => options = opt);
-			
+
 			SyslogNet.Client.SyslogOptions options = new SyslogNet.Client.SyslogOptions();
 			// options.SyslogVersion = SyslogNet.Client.SyslogVersions.Rfc3164;
 			options.SyslogVersion = SyslogNet.Client.SyslogVersions.Rfc5424;
@@ -100,6 +142,8 @@ namespace TestApplication
 			msg1.Send(options);
 
 			System.Console.WriteLine("Sent " + msg1.Message);
+
+
 
 
 			System.Console.WriteLine(" --- Press any key to continue --- ");
