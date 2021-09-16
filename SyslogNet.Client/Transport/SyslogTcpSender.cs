@@ -1,129 +1,143 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
+
 using SyslogNet.Client.Serialization;
+
 
 namespace SyslogNet.Client.Transport
 {
-	public enum MessageTransfer {
-		OctetCounting		= 0,
-		NonTransparentFraming	= 1
-	}
 
-	public class SyslogTcpSender : ISyslogMessageSender, IDisposable
-	{
-		protected String hostname;
-		protected int port;
 
-		protected TcpClient tcpClient = null;
-		protected Stream transportStream = null;
+    public enum MessageTransfer
+    {
+        OctetCounting = 0,
+        NonTransparentFraming = 1
+    }
 
-		public virtual MessageTransfer messageTransfer { get; set; }
-		public byte trailer { get; set; }
 
-		public SyslogTcpSender(string hostname, int port, bool shouldAutoConnect = true)
-		{
-			this.hostname = hostname;
-			this.port = port;
+    public class SyslogTcpSender
+        : ISyslogMessageSender, System.IDisposable
+    {
+        protected string hostname;
+        protected int port;
 
-			if (shouldAutoConnect)
-			{
-				Connect();
-			}
+        protected System.Net.Sockets.TcpClient tcpClient = null;
+        protected System.IO.Stream transportStream = null;
 
-			messageTransfer = MessageTransfer.OctetCounting;
-			trailer = 10; // LF
-		}
+        public virtual MessageTransfer messageTransfer { get; set; }
+        public byte trailer { get; set; }
 
-		public void Connect()
-		{
-			try
-			{
-				tcpClient = new TcpClient(hostname, port);
-				transportStream = tcpClient.GetStream();
-			}
-			catch
-			{
-				Disconnect();
-				throw;
-			}
-		}
 
-		public virtual void Reconnect()
-		{
-			Disconnect();
-			Connect();
-		}
+        public SyslogTcpSender(string hostname, int port, bool shouldAutoConnect = true)
+        {
+            this.hostname = hostname;
+            this.port = port;
 
-		public void Disconnect()
-		{
-			if (transportStream != null)
-			{
-				transportStream.Close();
-				transportStream = null;
-			}
+            if (shouldAutoConnect)
+            {
+                Connect();
+            }
 
-			if (tcpClient != null)
-			{
-				tcpClient.Close();
-				tcpClient = null;
-			}
-		}
+            //messageTransfer = MessageTransfer.OctetCounting;
+            messageTransfer = MessageTransfer.NonTransparentFraming;
+            trailer = 10; // LF
+        }
 
-		public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
-		{
-			Send(message, serializer, true);
-		}
 
-		protected void Send(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush = true)
-		{
-			if(transportStream == null)
-			{
-				throw new IOException("No transport stream exists");
-			}
+        public void Connect()
+        {
+            try
+            {
+                tcpClient = new System.Net.Sockets.TcpClient(hostname, port);
+                transportStream = tcpClient.GetStream();
+            }
+            catch
+            {
+                Disconnect();
+                throw;
+            }
+        }
 
-			using (MemoryStream memoryStream = new MemoryStream())
-			{
-				var datagramBytes = serializer.Serialize(message);
 
-				if (messageTransfer.Equals(MessageTransfer.OctetCounting))
-				{
-					byte[] messageLength = Encoding.ASCII.GetBytes(datagramBytes.Length.ToString());
-					memoryStream.Write(messageLength, 0, messageLength.Length);
-					memoryStream.WriteByte(32); // Space
-				}
+        public virtual void Reconnect()
+        {
+            Disconnect();
+            Connect();
+        }
 
-				memoryStream.Write(datagramBytes, 0, datagramBytes.Length);
 
-				if (messageTransfer.Equals(MessageTransfer.NonTransparentFraming))
-				{
-					memoryStream.WriteByte(trailer); // LF
-				}
+        public void Disconnect()
+        {
+            if (transportStream != null)
+            {
+                transportStream.Close();
+                transportStream = null;
+            }
 
-				transportStream.Write(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
-			}
+            if (tcpClient != null)
+            {
+                tcpClient.Close();
+                tcpClient = null;
+            }
+        }
 
-			if (flush && !(transportStream is NetworkStream))
-				transportStream.Flush();
-		}
 
-		public void Send(IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
-		{
-			foreach (SyslogMessage message in messages)
-			{
-				Send(message, serializer, false);
-			}
+        public void Send(SyslogMessage message, ISyslogMessageSerializer serializer)
+        {
+            Send(message, serializer, true);
+        }
 
-			if (!(transportStream is NetworkStream))
-				transportStream.Flush();
-		}
 
-		public void Dispose()
-		{
-			Disconnect();
-		}
-	}
+        protected void Send(SyslogMessage message, ISyslogMessageSerializer serializer, bool flush = true)
+        {
+            if (transportStream == null)
+            {
+                throw new System.IO.IOException("No transport stream exists");
+            }
+
+            using (System.IO.MemoryStream memoryStream = new System.IO.MemoryStream())
+            {
+                byte[] datagramBytes = serializer.Serialize(message);
+
+                if (messageTransfer.Equals(MessageTransfer.OctetCounting))
+                {
+                    byte[] messageLength = System.Text.Encoding.ASCII.GetBytes(datagramBytes.Length.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    memoryStream.Write(messageLength, 0, messageLength.Length);
+                    memoryStream.WriteByte(32); // Space
+                }
+
+                memoryStream.Write(datagramBytes, 0, datagramBytes.Length);
+
+                if (messageTransfer.Equals(MessageTransfer.NonTransparentFraming))
+                {
+                    memoryStream.WriteByte(trailer); // LF
+                }
+
+                transportStream.Write(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
+            }
+
+            if (flush && !(transportStream is System.Net.Sockets.NetworkStream))
+                transportStream.Flush();
+        }
+
+
+        public void Send(System.Collections.Generic.IEnumerable<SyslogMessage> messages, ISyslogMessageSerializer serializer)
+        {
+            foreach (SyslogMessage message in messages)
+            {
+                Send(message, serializer, false);
+            }
+
+            if (!(transportStream is System.Net.Sockets.NetworkStream))
+                transportStream.Flush();
+        }
+
+
+        public void Dispose()
+        {
+            Disconnect();
+        }
+
+
+    }
+
+
 }

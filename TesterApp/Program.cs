@@ -59,7 +59,7 @@ namespace TesterApp
 							: (ISyslogMessageSerializer)new SyslogLocalMessageSerializer();
 
 					ISyslogMessageSender sender = options.NetworkProtocol == "tcp"
-						? (ISyslogMessageSender)new SyslogEncryptedTcpSender(options.SyslogServerHostname, options.SyslogServerPort)
+						? (ISyslogMessageSender)new SyslogEncryptedTcpSender(options.SyslogServerHostname, options.SyslogServerPort, SslProtocols.Tls12)
 						: options.NetworkProtocol == "udp"
 							? (ISyslogMessageSender)new SyslogUdpSender(options.SyslogServerHostname, options.SyslogServerPort)
 							: (ISyslogMessageSender)new SyslogLocalSender();
